@@ -3,8 +3,15 @@ import struct
  
 # initializing socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = socket.gethostname() 
-port = 12345
+# host = socket.gethostname() 
+# host = '0.0.0.0'
+host = '192.168.4.1'
+# print(socket.gethostbyname(socket.gethostname()))
+port = 7777
+
+print(socket.gethostbyname(host))
+
+print(host, port)
 
 # binding port and host
 s.bind((host, port))  
