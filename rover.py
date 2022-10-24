@@ -2,8 +2,8 @@ import socket, select, queue
 
 # initializing socket
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = '192.168.4.1'
-# host = "0.0.0.0" # for testing only
+# host = '192.168.4.1'
+host = "0.0.0.0" # for testing only
 serverPort = 7777
 
 server.setblocking(0) #force the system to not block the calls
@@ -19,13 +19,15 @@ outputs = []
 messageQueues = {}
 
 while inputs:
+    # This thing takes a file discriptor
     readable, writable, exceptional = select.select(inputs, outputs, inputs)
 
     # loop through each queue and do the things
     for s in readable:
         if s is server:
             connection, addr = server.accept()
-            print(addr, "just joined");
+            print(connection)
+            print(addr, "just joined")
             connection.setblocking(0)
             inputs.append(connection)
             messageQueues[connection] = [queue.Queue(), 0]
