@@ -11,8 +11,6 @@ server.setblocking(0) #force the system to not block the calls
 # binding port and host
 server.bind((host, serverPort))  
 
-print(server)
- 
 # waiting for a client to connect
 server.listen(2) # 2 means that the server can deal with 2 connections. We only need 2 for now
 
