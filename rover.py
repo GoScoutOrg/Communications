@@ -30,13 +30,15 @@ while inputs:
             print(addr, "just joined")
             connection.setblocking(0)
             inputs.append(connection)
-            messageQueues[connection] = [queue.Queue(), 0]
+            if messageQueues[connection.getpeername()[0]]:
+                print('reconnect')
+            messageQueues[connection.getpeername()[0]] = [queue.Queue(), 0]
         else:
             data = s.recv(1024)
             print("\n\nrecv: ", data)
             if data:
-                messageQueues[s][0].put(data)
-                messageQueues[s][1] += 1
+                messageQueues[s.getpeername()[0]][0].put(data)
+                messageQueues[s.getpeername()[0]][1] += 1
                 if s not in outputs:
                     outputs.append(s)
             else:
@@ -45,12 +47,12 @@ while inputs:
                     outputs.remove(s)
                 inputs.remove(s)
                 s.close()
-                del messageQueues[s]
+                # del messageQueues[s.getpeername()[0]]
 
     for s in writable:
         try:
-            next_msg = messageQueues[s][0].get_nowait()
-            seq = messageQueues[s][1]
+            next_msg = messageQueues[s.getpeername()[0]][0].get_nowait()
+            seq = messageQueues[s.getpeername()[0]][1]
             print("queue: ", next_msg, seq)
         except queue.Empty:
             outputs.remove(s)
