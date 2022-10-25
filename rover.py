@@ -30,9 +30,8 @@ while inputs:
             print(addr, "just joined")
             connection.setblocking(0)
             inputs.append(connection)
-            if messageQueues.get(connection.getpeername()[0]):
-                print('reconnect')
-            messageQueues[connection.getpeername()[0]] = [queue.Queue(), 0]
+            if not messageQueues.get(connection.getpeername()[0]):
+                messageQueues[connection.getpeername()[0]] = [queue.Queue(), 0]
         else:
             data = s.recv(1024)
             print("\n\nrecv: ", data)
