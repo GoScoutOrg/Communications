@@ -1,4 +1,5 @@
 import socket
+import PDU.py
 
 # initize sockets and connection
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -9,7 +10,7 @@ serverPort = 7777
 
 # connect to host
 s.connect((host, serverPort))
- 
+#new_packet = GSPacket(1, "192.168.5.0".encode(), "192.168.4.0".encode(), 1, 1, 1, "hi".encode)
 send = "";
 while send != "stop":
     send = input(": ")
