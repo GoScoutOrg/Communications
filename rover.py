@@ -1,10 +1,10 @@
 import socket, select, queue
-import PDU.py
+import PDU
 
 # initializing socket
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = '192.168.4.1'
-# host = "0.0.0.0" # for testing only
+# host = '192.168.4.1'
+host = "0.0.0.0" # for testing only
 serverPort = 7777
 
 server.setblocking(0) #force the system to not block the calls
@@ -35,8 +35,13 @@ while inputs:
                 messageQueues[connection.getpeername()[0]] = [queue.Queue(), 0]
         else:
             data = s.recv(1024)
-            print("\n\nrecv: ", data)
             if data:
+                recvPacket = PDU.unpackString(data.decode())
+                print("\n\nrecv: ", recvPacket)
+                print("\n\nrecv: ", recvPacket.checksum())
+                if not recvPacket.checksum():
+                    # Ask for packet again
+                    print("bad packet")
                 messageQueues[s.getpeername()[0]][0].put(data)
                 messageQueues[s.getpeername()[0]][1] += 1
                 if s not in outputs:
@@ -47,7 +52,6 @@ while inputs:
                     outputs.remove(s)
                 inputs.remove(s)
                 s.close()
-                # del messageQueues[s.getpeername()[0]]
 
     for s in writable:
         try:

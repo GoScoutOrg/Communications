@@ -1,24 +1,27 @@
 import socket
-import PDU.py
+import PDU
 
 # initize sockets and connection
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = '192.168.4.1'
-# host = "0.0.0.0" # for testing only
+# host = '192.168.4.1'
+host = "0.0.0.0" # for testing only
 
 serverPort = 7777
 
 # connect to host
 s.connect((host, serverPort))
-#new_packet = GSPacket(1, "192.168.5.0".encode(), "192.168.4.0".encode(), 1, 1, 1, "hi".encode)
-send = "";
-while send != "stop":
-    send = input(": ")
-    if not send:
+
+data = "";
+while data != "stop":
+
+    data = input(": ")
+    if not data:
         continue
-    packet = send
-    print("sending", packet) 
-    s.send(packet.encode())
+
+    packet = PDU.GSPacket(1, "192.168.5.0", "192.168.4.0", 1, 1, 1, data)
+    strPacket = packet.convertToString();
+    print("sending", strPacket) 
+    s.send(strPacket.encode())
 
     recv = s.recv(1024);
     print("recv", recv)
