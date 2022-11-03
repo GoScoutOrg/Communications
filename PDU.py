@@ -12,7 +12,8 @@ class GSPacket:
                 tcp_seq,
                 tcp_ack_seq,
                 tcp_hdr_len,
-                data
+                data,
+                checksum = None
                 ):
         self.tcp_flags = tcp_flags    # TCP Flags
         self.tcp_src = tcp_src   # Source IP
@@ -21,10 +22,21 @@ class GSPacket:
         self.tcp_ack_seq = tcp_ack_seq  # Acknownlegment Sequence
         self.tcp_hdr_len = tcp_hdr_len   # Header Length
         self.data = data
-        self.checksum = None
+        self.checksum = checksum
 
-    def checksum(self):
-        return self.checksum == hash(self)
+    def __repr__(self):
+        data_to_send = str(self.tcp_flags) + "+" + str(self.tcp_src) + "+" + \
+            str(self.tcp_dst) + "+" + str(self.tcp_seq) + "+" + \
+            str(self.tcp_ack_seq) + "+" + str(self.tcp_hdr_len) + "+"  + \
+            str(self.data) + "+" + str(self.checksum)
+        return data_to_send
+
+    def checkChecksum(self):
+        saveChecksum = self.checksum;
+        self.checksum = None;
+        ret = self.checksum == hash(self)
+        self.checksum = saveChecksum
+        return ret;
     
     def convertToString(self):
         data_to_send = str(self.tcp_flags) + "+" + str(self.tcp_src) + "+" + \
@@ -35,6 +47,6 @@ class GSPacket:
 
 def unpackString(s):
     line = s.split("+")
-    return GSPacket(s[0], s[1], s[2], s[3], s[4], s[5], s[6])
+    return GSPacket(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7])
 
 

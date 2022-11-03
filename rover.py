@@ -37,11 +37,12 @@ while inputs:
             data = s.recv(1024)
             if data:
                 recvPacket = PDU.unpackString(data.decode())
-                print("\n\nrecv: ", recvPacket)
-                print("\n\nrecv: ", recvPacket.checksum())
-                if not recvPacket.checksum():
+                print(data.decode())
+                print(recvPacket)
+                if not recvPacket.checkChecksum():
                     # Ask for packet again
                     print("bad packet")
+                    break
                 messageQueues[s.getpeername()[0]][0].put(data)
                 messageQueues[s.getpeername()[0]][1] += 1
                 if s not in outputs:
