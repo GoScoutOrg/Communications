@@ -1,8 +1,8 @@
 import socket, select, queue
 import PDU
 
-def socketToIP(socket):
-    return socket.getpeername()[0]
+def socketToIP(s):
+    return s.getpeername()[0]
 
 def main():
     # initializing socket
@@ -35,15 +35,14 @@ def main():
                 print(addr, "just joined")
                 connection.setblocking(0)
                 inputs.append(connection)
-                if not messageQueues.get(connection.getpeername()[0]):
-                    messageQueues[connection.getpeername()[0]] = [queue.Queue(), 0, 0]
+                if not messageQueues.get(socketToIP(connection)):
+                    messageQueues[socketToIP(connection)] = queue.Queue()
             else:
                 data = s.recv(1024)
                 if data:
                     packet = PDU.decompress(data)
-                    print("\n-------\n", packet, "\n-------\n")
-                    messageQueues[socketToIP(s)][0].put(data)
-                    messageQueues[socketToIP(s)][1] += 1
+                    print(packet)
+                    messageQueues[socketToIP(s)].put(packet)
                     if s not in outputs:
                         outputs.append(s)
                 else:
@@ -55,13 +54,21 @@ def main():
 
         for s in writable:
             try:
-                next_msg = messageQueues[socketToIP(s)][0].get_nowait()
-                seq = messageQueues[socketToIP(s)][1]
-                print("sending seq")
+                next_msg = messageQueues[socketToIP(s)].get_nowait()
             except queue.Empty:
                 outputs.remove(s)
             else:
-                s.send(str(seq).encode())
+                packet = None
+                flag = next_msg.flags
+                if (flag == PDU.FlagConstants.HELLO.value):
+                    packet = PDU.GSPacket(PDU.FlagConstants.HELLO.value, src_ip, socketToIP(s), 0).compress()
+                elif (flag == PDU.FlagConstants.HEARTBEAT.value):
+                    packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT.value, src_ip, socketToIP(s), 0).compress()
+
+                if packet:
+                    s.send(packet)
+                else:
+                    print("no valid packet")
 
         for s in exceptional:
             inputs.remove(s)
