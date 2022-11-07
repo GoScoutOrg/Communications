@@ -1,52 +1,68 @@
-#from email import header
 import socket
 import struct
 
-#construct the header
+class FlagConstants:
+    HELLO = 0x0
+    HEARTBEAT = 0x1
+    MOVE = 0x2
+    ROTATE = 0x3
 
 class GSPacket:
     def __init__(self,
-                tcp_flags,
-                tcp_src, 
-                tcp_dest,
-                tcp_seq,
-                tcp_ack_seq,
-                tcp_hdr_len,
-                data,
-                checksum = None
+                flags,
+                src_ip, 
+                dst_ip,
+                seq,
+                ack,
+                payload_len,
+                data = None
                 ):
-        self.tcp_flags = tcp_flags    # TCP Flags
-        self.tcp_src = tcp_src   # Source IP
-        self.tcp_dst = tcp_dest    # Destination IP
-        self.tcp_seq = tcp_seq    # Sequence
-        self.tcp_ack_seq = tcp_ack_seq  # Acknownlegment Sequence
-        self.tcp_hdr_len = tcp_hdr_len   # Header Length
-        self.data = data
-        self.checksum = checksum
+        self.flags = flags    # TCP Flags (uint8_t)
+        self.src_ip = src_ip   # Source IP (uint8_t * 4)
+        self.dst_ip = dst_ip    # dst_ipination IP (uint8_t * 4)
+        self.seq = seq    # Sequence (uint32_t)
+        self.ack = ack  # Acknownlegment Sequence (uint32_t)
+        self.payload_len = payload_len   # Payload Length (uint32_t)
+        self.data = data                # Data (max up to 1024 Bytes)
 
     def __repr__(self):
-        data_to_send = str(self.tcp_flags) + "+" + str(self.tcp_src) + "+" + \
-            str(self.tcp_dst) + "+" + str(self.tcp_seq) + "+" + \
-            str(self.tcp_ack_seq) + "+" + str(self.tcp_hdr_len) + "+"  + \
-            str(self.data) + "+" + str(self.checksum)
-        return data_to_send
+        ret = []
+        ret.append("\n---------------")
+        ret.append(f"FLAGS: {self.flags}")
+        ret.append(f"SRC: {self.src_ip}")
+        ret.append(f"DST: {self.dst_ip}")
+        ret.append(f"SEQ: {self.seq}")
+        ret.append(f"ACK: {self.ack}")
+        ret.append(f"PAYLOAD_LEN: {self.payload_len}")
+        ret.append(f"DATA: {self.data}")
+        ret.append("\n---------------")
+        return "\n".join(ret)
 
-    def checkChecksum(self):
-        saveChecksum = self.checksum;
-        self.checksum = None;
-        ret = self.checksum == hash(self)
-        self.checksum = saveChecksum
-        return ret;
-    
-    def convertToString(self):
-        data_to_send = str(self.tcp_flags) + "+" + str(self.tcp_src) + "+" + \
-            str(self.tcp_dst) + "+" + str(self.tcp_seq) + "+" + \
-            str(self.tcp_ack_seq) + "+" + str(self.tcp_hdr_len) + "+"  + \
-            str(self.data) + "+" + str(hash(self))
-        return data_to_send
+    def packIp(self, ipString):
+        ip = [ struct.pack("B", int(x.rjust(3, '0'))) for x in ipString.split(".") ]
+        return ip[0] + ip[1] + ip[2] + ip[3]
 
-def unpackString(s):
-    line = s.split("+")
-    return GSPacket(line[0], line[1], line[2], line[3], line[4], line[5], line[6], line[7])
+    def compress(self):
+        flags = struct.pack("B", self.flags)
+        src_ip = self.packIp(self.src_ip)
+        dst_ip = self.packIp(self.dst_ip)
+        seq = struct.pack("I", self.seq)
+        ack = struct.pack("I", self.ack)
+        payload_len = struct.pack("I", self.payload_len)
+        if (self.payload_len == 0):
+            return flags + src_ip + dst_ip + seq + ack + payload_len
+        data = bytes(self.data, "ascii")
+        return flags + src_ip + dst_ip + seq + ack + payload_len + data
 
+def decompress(packet):
+    flags = packet[0]
+    src_ip = ".".join( [ str(x) for x in packet[1:5] ])
+    dst_ip = ".".join( [ str(x) for x in packet[5:9] ])
+    seq = int.from_bytes(packet[9:13], "little")
+    ack = int.from_bytes(packet[13:17], "little")
+    payload_len = int.from_bytes(packet[17:21], "little")
+    if (payload_len == 0):
+        return GSPacket(flags, src_ip, dst_ip, seq, ack, payload_len)
+    data = packet[21:]
+    return GSPacket(flags, src_ip, dst_ip, seq, ack, payload_len, data)
 

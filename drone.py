@@ -1,30 +1,42 @@
-import socket
+import socket, queue
+from time import sleep
+
 import PDU
 
-# initize sockets and connection
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# host = '192.168.4.1'
-host = "0.0.0.0" # for testing only
+def main():
+    # initize sockets and connection
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # dst_ip = '192.168.4.1'
+    dst_ip = "0.0.0.0" # for testing only
 
-serverPort = 7777
+    src_ip = socket.gethostbyname(socket.gethostname())
 
-# connect to host
-s.connect((host, serverPort))
+    serverPort = 7777
 
-data = "";
-while data != "stop":
+    messageQueues = queue.Queue()
+    seq = 0
+    ack = 0
 
-    data = input(": ")
-    if not data:
-        continue
+    # connect to host
+    s.connect((dst_ip, serverPort))
 
-    packet = PDU.GSPacket(1, "192.168.5.0", "192.168.4.0", 1, 1, 1, data)
-    strPacket = packet.convertToString();
-    print("sending", strPacket) 
-    s.send(strPacket.encode())
+    # Hello!
+    packet = PDU.GSPacket(PDU.FlagConstants.HELLO, src_ip, dst_ip, seq, ack, 0).compress()
+    s.send(packet)
+    seq += 1
 
-    recv = s.recv(1024);
-    print("recv", recv)
-    
-s.close()
+    while True:
+        sleep(1)
+        packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT, src_ip, dst_ip, seq, ack, 0).compress()
+        seq += 1
+        s.send(packet)
 
+        recv = s.recv(1024)
+        packet = PDU.decompress(recv)
+        print(packet)
+
+    s.close()
+
+
+if __name__ == "__main__":
+    main()
