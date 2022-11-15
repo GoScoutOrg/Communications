@@ -21,9 +21,9 @@ def main():
     while True:
         try: 
             s.connect((dst_ip, serverPort))
-            break;
+            break
         except:
-            continue;
+            continue
 
     # Hello!
     flag = PDU.FlagConstants.VOID
@@ -54,10 +54,10 @@ def main():
 
         packet = None
         if (n == testStop):
-            packet = PDU.GSPacket(PDU.FlagConstants.ROTATE.value, src_ip, dst_ip, 11, "HELLO WORLD").compress();
+            packet = PDU.GSPacket(PDU.FlagConstants.ROTATE.value, src_ip, dst_ip, 11, "HELLO WORLD").compress()
             n = 0
             testStop = random.randint(1,10)
-            stopHeartbeat = True;
+            stopHeartbeat = True
         else:
             packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT.value, src_ip, dst_ip, 0).compress()
             n+=1
@@ -65,7 +65,7 @@ def main():
         if packet:
             s.send(packet)
 
-        flag = PDU.FlagConstants.VOID.value;
+        flag = PDU.FlagConstants.VOID.value
         packet = None
 
         try:
@@ -84,7 +84,7 @@ def main():
             packet = PDU.decompress(data)
             flag = packet.flags
             if flag == PDU.FlagConstants.ACK.value:
-                stopHeartbeat = False;
+                stopHeartbeat = False
             print(packet)
     s.close()
 
