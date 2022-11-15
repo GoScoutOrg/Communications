@@ -28,7 +28,8 @@ def main():
     # Hello!
     flag = PDU.FlagConstants.VOID
     while flag != PDU.FlagConstants.HELLO.value:
-        time.sleep(random.randint(1, 4))
+        # time.sleep(random.randint(1, 4))
+        time.sleep(1)
         packet = PDU.GSPacket(PDU.FlagConstants.HELLO.value, src_ip, dst_ip, 0).compress()
         s.send(packet)
         try:
@@ -50,7 +51,8 @@ def main():
     n = 0
     testStop = random.randint(1,10)
     while True:
-        time.sleep(random.randint(1, 4))
+        # time.sleep(random.randint(1, 4))
+        time.sleep(1)
 
         packet = None
         if (n == testStop):

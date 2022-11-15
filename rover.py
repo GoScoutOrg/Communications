@@ -26,7 +26,8 @@ def main():
     haltExecution = False
 
     while inputs:
-        time.sleep(random.randint(1, 4))
+        # time.sleep(random.randint(1, 4))
+        time.sleep(1)
         # This thing takes a file discriptor
         readable, writable, exceptional = select.select(inputs, outputs, [])
 
