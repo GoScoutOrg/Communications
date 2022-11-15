@@ -25,7 +25,7 @@ def main():
 
     while inputs:
         # This thing takes a file discriptor
-        readable, writable, exceptional = select.select(inputs, outputs, inputs)
+        readable, writable, exceptional = select.select(inputs, outputs, [])
 
         # loop through each queue and do the things
         for s in readable:
@@ -41,6 +41,7 @@ def main():
                 data = s.recv(1024)
                 if data:
                     packet = PDU.decompress(data)
+                    print("RECV")
                     print(packet)
                     messageQueues[socketToIP(s)].put(packet)
                     if s not in outputs:
@@ -60,22 +61,18 @@ def main():
             else:
                 packet = None
                 flag = next_msg.flags
-                if (flag == PDU.FlagConstants.HELLO.value):
+                if flag == PDU.FlagConstants.HELLO.value:
                     packet = PDU.GSPacket(PDU.FlagConstants.HELLO.value, src_ip, socketToIP(s), 0).compress()
-                elif (flag == PDU.FlagConstants.HEARTBEAT.value):
+                elif flag == PDU.FlagConstants.HEARTBEAT.value:
                     packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT.value, src_ip, socketToIP(s), 0).compress()
+                elif flag == PDU.FlagConstants.MOVE.value or flag == PDU.FlagConstants.ROTATE.value: 
+                    packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(s), 0).compress()
+                print('sending', PDU.decompress(packet), flag)
 
                 if packet:
                     s.send(packet)
                 else:
                     print("no valid packet")
-
-        for s in exceptional:
-            inputs.remove(s)
-            if s in outputs:
-                outputs.remove(s)
-            s.close()
-            del messageQueues[s]
 
 if __name__ == "__main__":
     main()
