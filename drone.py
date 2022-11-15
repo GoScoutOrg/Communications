@@ -10,8 +10,8 @@ def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(2) # Time out tim
 
-    # dst_ip = '192.168.4.1'
-    dst_ip = "0.0.0.0" # for testing only
+    dst_ip = '192.168.4.10'
+    # dst_ip = "0.0.0.0" # for testing only
 
     src_ip = socket.gethostbyname(socket.gethostname())
 

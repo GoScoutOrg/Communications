@@ -8,8 +8,9 @@ def socketToIP(s):
 def main():
     # initializing socket
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # host = '192.168.4.1'
-    src_ip = "0.0.0.0" # for testing only
+
+    # src_ip = "0.0.0.0" # for testing only
+    src_ip = '192.168.4.10'
     serverPort = 7777
 
     server.setblocking(0) #force the system to not block the calls
