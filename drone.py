@@ -1,6 +1,7 @@
 import socket
 import time
 import sys
+import random
 
 import PDU
 
@@ -27,10 +28,9 @@ def main():
     # Hello!
     flag = PDU.FlagConstants.VOID
     while flag != PDU.FlagConstants.HELLO.value:
-        time.sleep(1)
+        time.sleep(random.randint(1, 4))
         packet = PDU.GSPacket(PDU.FlagConstants.HELLO.value, src_ip, dst_ip, 0).compress()
         s.send(packet)
-        print('sent hello')
         try:
             data = s.recv(1024)
         except socket.timeout as e:
@@ -47,11 +47,18 @@ def main():
 
     # Data Loop
     stopHeartbeat = False
+    n = 0
     while True:
-        time.sleep(1)
+        time.sleep(random.randint(1, 10))
 
-        if (flag == PDU.FlagConstants.HEARTBEAT.value or flag == PDU.FlagConstants.HELLO.value):
+        packet = None
+        if (n == 5):
+            packet = PDU.GSPacket(PDU.FlagConstants.ROTATE.value, src_ip, dst_ip, 11, "HELLO WORLD").compress();
+            n = 0
+            stopHeartbeat = True;
+        else:
             packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT.value, src_ip, dst_ip, 0).compress()
+            n+=1
 
         if packet:
             s.send(packet)
@@ -72,8 +79,10 @@ def main():
                 print("Error occured: ", e)
                 sys.exit(1)
         else:
-            packet = PDU.decompress(packet)
+            packet = PDU.decompress(data)
             flag = packet.flags
+            if flag == PDU.FlagConstants.ACK.value:
+                stopHeartbeat = False;
             print(packet)
     s.close()
 

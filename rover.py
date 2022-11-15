@@ -1,5 +1,6 @@
 import socket, select, queue
 import PDU
+import time, random
 
 def socketToIP(s):
     return s.getpeername()[0]
@@ -22,8 +23,10 @@ def main():
     inputs = [server]
     outputs = []
     messageQueues = {}
+    haltExecution = False
 
     while inputs:
+        time.sleep(random.randint(1, 4))
         # This thing takes a file discriptor
         readable, writable, exceptional = select.select(inputs, outputs, [])
 
@@ -41,11 +44,15 @@ def main():
                 data = s.recv(1024)
                 if data:
                     packet = PDU.decompress(data)
-                    print("RECV")
-                    print(packet)
                     messageQueues[socketToIP(s)].put(packet)
                     if s not in outputs:
                         outputs.append(s)
+                    flag = packet.flags
+                    if flag == PDU.FlagConstants.MOVE.value or flag == PDU.FlagConstants.ROTATE.value: 
+                        haltExecution = True
+                    elif flag == PDU.FlagConstants.HEARTBEAT.value:
+                        haltExecution = False
+                    print("RECV", packet, haltExecution)
                 else:
                     print(f"{socketToIP(s)} disconnected")
                     if s in outputs:
@@ -67,7 +74,6 @@ def main():
                     packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT.value, src_ip, socketToIP(s), 0).compress()
                 elif flag == PDU.FlagConstants.MOVE.value or flag == PDU.FlagConstants.ROTATE.value: 
                     packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(s), 0).compress()
-                print('sending', PDU.decompress(packet), flag)
 
                 if packet:
                     s.send(packet)
