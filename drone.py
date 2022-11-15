@@ -48,13 +48,15 @@ def main():
     # Data Loop
     stopHeartbeat = False
     n = 0
+    testStop = random.randint(1,10)
     while True:
-        time.sleep(random.randint(1, 10))
+        time.sleep(random.randint(1, 4))
 
         packet = None
-        if (n == 5):
+        if (n == testStop):
             packet = PDU.GSPacket(PDU.FlagConstants.ROTATE.value, src_ip, dst_ip, 11, "HELLO WORLD").compress();
             n = 0
+            testStop = random.randint(1,10)
             stopHeartbeat = True;
         else:
             packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT.value, src_ip, dst_ip, 0).compress()
