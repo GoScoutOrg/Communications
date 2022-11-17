@@ -70,6 +70,14 @@ def main():
                     print("RECV", packet, haltExecution)
                 else:
                     print("it hit THE spot")
+                    try:
+                        data = s.recv(1024)
+                    except socket.error as e: 
+                        print("Agent Drone disconnected")
+                        if s in outputs:
+                            outputs.remove(s)
+                        inputs.remove(s)
+                        s.close()
                     
 
         for s in writable:
