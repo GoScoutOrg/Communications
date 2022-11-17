@@ -30,6 +30,7 @@ def main():
         # time.sleep(random.randint(1, 4))
         time.sleep(1)
         # This thing takes a file discriptor
+        THESPOT = 0
         readable, writable, exceptional = select.select(inputs, outputs, [])
 
         # loop through each queue and do the things
@@ -69,36 +70,34 @@ def main():
                         haltExecution = False
                     print("RECV", packet, haltExecution)
                 else:
-                    print("it hit THE spot")
-                    try:
-                        data = s.recv(1024)
-                    except socket.error as e: 
-                        print("Agent Drone disconnected")
-                        if s in outputs:
-                            outputs.remove(s)
-                        inputs.remove(s)
-                        s.close()
                     
-
-        for s in writable:
-            try:
-                next_msg = messageQueues[socketToIP(s)].get_nowait()
-            except queue.Empty:
-                outputs.remove(s)
-            else:
-                packet = None
-                flag = next_msg.flags
-                if flag == PDU.FlagConstants.HELLO.value:
-                    packet = PDU.GSPacket(PDU.FlagConstants.HELLO.value, src_ip, socketToIP(s), 0).compress()
-                elif flag == PDU.FlagConstants.HEARTBEAT.value:
-                    packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT.value, src_ip, socketToIP(s), 0).compress()
-                elif flag == PDU.FlagConstants.MOVE.value or flag == PDU.FlagConstants.ROTATE.value: 
-                    packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(s), 0).compress()
-
-                if packet:
-                    s.send(packet)
+                    THESPOT = 1
+                    print("Agent Drone disconnected")
+                    if s in outputs:
+                        outputs.remove(s)
+                    inputs.remove(s)
+                    s.close()
+                    
+        if not THESPOT:
+            for s in writable:
+                try:
+                    next_msg = messageQueues[socketToIP(s)].get_nowait()
+                except queue.Empty:
+                    outputs.remove(s)
                 else:
-                    print("no valid packet")
+                    packet = None
+                    flag = next_msg.flags
+                    if flag == PDU.FlagConstants.HELLO.value:
+                        packet = PDU.GSPacket(PDU.FlagConstants.HELLO.value, src_ip, socketToIP(s), 0).compress()
+                    elif flag == PDU.FlagConstants.HEARTBEAT.value:
+                        packet = PDU.GSPacket(PDU.FlagConstants.HEARTBEAT.value, src_ip, socketToIP(s), 0).compress()
+                    elif flag == PDU.FlagConstants.MOVE.value or flag == PDU.FlagConstants.ROTATE.value: 
+                        packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(s), 0).compress()
+
+                    if packet:
+                        s.send(packet)
+                    else:
+                        print("no valid packet")
 
 if __name__ == "__main__":
     main()
