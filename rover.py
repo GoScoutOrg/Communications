@@ -1,6 +1,6 @@
 import socket, select, queue
 import PDU
-import time, random
+import time, random, sys
 
 def socketToIP(s):
     return s.getpeername()[0]
@@ -43,7 +43,20 @@ def main():
                 if not messageQueues.get(socketToIP(connection)):
                     messageQueues[socketToIP(connection)] = queue.Queue()
             else:
-                data = s.recv(1024)
+                try:
+                    data = s.recv(1024)
+                except socket.error as e: 
+                    time.sleep(3)
+                    try:
+                        data = s.recv(1024)
+                    except socket.error as e: 
+                        print("Agent Drone disconnected")
+                        if s in outputs:
+                            outputs.remove(s)
+                        inputs.remove(s)
+                        s.close()
+                    
+                    # sys.exit(1) 
                 if data:
                     packet = PDU.decompress(data)
                     messageQueues[socketToIP(s)].put(packet)
@@ -56,11 +69,8 @@ def main():
                         haltExecution = False
                     print("RECV", packet, haltExecution)
                 else:
-                    print(f"{socketToIP(s)} disconnected")
-                    if s in outputs:
-                        outputs.remove(s)
-                    inputs.remove(s)
-                    s.close()
+                    print("it hit THE spot")
+                    
 
         for s in writable:
             try:
