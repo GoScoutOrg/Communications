@@ -45,8 +45,9 @@ def client_proc(q, system_ip, connect_ip, port):
         x = client.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
     client_data = (connect_ip, port)
-    client.bind((system_ip, port + 1))
+    # client.bind((system_ip, port))
     print("client initialized: ", client)
+    print("connecting to: ", client_data)
 
     while True:
         try:
@@ -59,13 +60,13 @@ def client_proc(q, system_ip, connect_ip, port):
         except ConnectionRefusedError:
             pass
 #  while True:
-    try:
-        s = "Hello?"
-        print('sending')
-        client.send(s.encode())
-    except KeyboardInterrupt:
-        client.close()
-        return
+    # try:
+    #     s = "Hello?"
+    #     print('sending')
+    #     client.send(s.encode())
+    # except KeyboardInterrupt:
+    #     client.close()
+    #     return
 
 def socketToIP(s):
     return s.getpeername()[0]
@@ -92,7 +93,7 @@ def send_PDU(socket, flag, src_ip):
 
 
 def main() -> None:
-    if (len(sys.argv) - 3 <= 0):
+    if (len(sys.argv) - 4 <= 0):
         print("Usage: python3 main.py [system ip] [connection ip] [port]")
         return
     args = sys.argv[1:]
@@ -102,25 +103,27 @@ def main() -> None:
     if len(system_ip.split('.')) != 4 or len(connect_ip.split('.')) != 4:
         print("Usage: python3 main.py [system ip] [connection ip] [port]")
         return
-    port = args[2]
-    if not port.isnumeric():
+    port_a = args[2]
+    port_b = args[3]
+    if not port_a.isnumeric() or not port_b.isnumeric():
         print("Usage: python3 main.py [system ip] [connection ip] [port]")
         return
     else:
-        port = int(port)
-        if port < 1024 or port > 49151:
+        port_a = int(port_a)
+        port_b = int(port_b)
+        if (port_a < 1024 or port_a > 49151) or (port_b < 1024 or port_b > 49151):
             print("Usage: python3 main.py [system ip] [connection ip] [port]")
             return
 
-
-
     print("Initializing system IP: ", system_ip)
+    print("Initializing system port: ", port_a)
     print("Initializing connection IP: ", connect_ip)
+    print("Initializing connection IP: ", port_b)
 
     q = Queue()
 
-    server = Process(target=server_proc, args=(q, system_ip, connect_ip, port))
-    client = Process(target=client_proc, args=(q, system_ip, connect_ip, port))
+    server = Process(target=server_proc, args=(q, system_ip, connect_ip, port_a))
+    client = Process(target=client_proc, args=(q, system_ip, connect_ip, port_b))
 
     server.start()
     client.start()
