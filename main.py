@@ -53,6 +53,8 @@ def client_proc(q, system_ip, connect_ip):
         except KeyboardInterrupt:
             client.close()
             return
+        except ConnectionRefusedError:
+            pass
     while True:
         try:
             s = input("Enter data: ")
