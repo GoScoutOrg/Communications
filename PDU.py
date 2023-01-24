@@ -7,8 +7,8 @@ class FlagConstants(Flag):
     VOID  = 0x0
 
     # Stable coms
-    HELLO = 0x1
-    HEARTBEAT = 0x2
+    EXECUTION = 0x1
+    LOCATION = 0x2
     ACK = 0x3
     CLOSE = 0x4
 

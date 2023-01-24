@@ -1,5 +1,6 @@
 import sys
 import socket
+import PDU
 from multiprocessing import Process, Queue
 
 class CommuncationPacket:
@@ -49,7 +50,7 @@ def client_proc(q, system_ip, connect_ip, port):
 
     while True:
         try:
-            client.connect(client_data);
+            client.connect(client_data)
             print("connected to the server")
             break
         except KeyboardInterrupt:
@@ -65,6 +66,29 @@ def client_proc(q, system_ip, connect_ip, port):
     except KeyboardInterrupt:
         client.close()
         return
+
+def socketToIP(s):
+    return s.getpeername()[0]
+
+def send_PDU(socket, flag, src_ip):
+    # grab GPS info 
+    gps_info = "gps info\n"
+
+    packet = None
+    
+    if flag == PDU.FlagConstants.EXECUTION.value:
+        packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
+    elif flag == PDU.FlagConstants.ACK.value:
+        packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
+    elif flag == PDU.FlagConstants.LOCATION.value:
+        packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, gps_info).compress()
+
+    if packet:
+        socket.send(packet)
+    else:   
+        print("no valid packet")
+        return -1
+    return
 
 
 def main() -> None:
