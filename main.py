@@ -31,9 +31,13 @@ def server_proc(q, system_ip, connect_ip):
     print("Server initialized: ", server)
 
     while True:
-        client_connection, addr = server.accept()
-        print("Incoming connection from ", addr)
-        connections[addr] = client_connection
+        try:
+            client_connection, addr = server.accept()
+            print("Incoming connection from ", addr)
+            connections[addr] = client_connection
+        except KeyboardInterrupt:
+            server.close()
+            return
 
 def client_proc(q, system_ip, connect_ip):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -46,13 +50,17 @@ def client_proc(q, system_ip, connect_ip):
         try:
             client.connect(client_data);
             break
-        except:
-            pass
+        except KeyboardInterrupt:
+            client.close()
+            return
     while True:
-        s = input("Enter data: ")
-        print('sending')
-        client.send(s.encode())
-    return
+        try:
+            s = input("Enter data: ")
+            print('sending')
+            client.send(s.encode())
+        except KeyboardInterrupt:
+            client.close()
+            return
 
 
 def main() -> None:
@@ -79,7 +87,12 @@ def main() -> None:
     client.start()
 
     server.join()
+    print("server done")
     client.join()
+    print("client done")
+
+    print("done")
+
     return
 
 if __name__ == "__main__":
