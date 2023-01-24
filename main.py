@@ -16,6 +16,12 @@ system_ip = ""
 
 def server_proc(q):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # check and turn on TCP Keepalive
+    x = server.getsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE)
+    if(x == 0):
+        x = server.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
     server_data = (system_ip, 0) # Setting port = 0 lets os designate a port
     server.bind(server_data)
 
@@ -33,14 +39,24 @@ def server_proc(q):
 
 def client_proc(q):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    x = client.getsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE)
+    if(x == 0):
+        x = client.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+
     client_data = (system_ip, 0)
 
     while q.empty():
         pass
     data = q.get()
     if data.isServer and data.command & COMMAND_SERVER_PORT == COMMAND_SERVER_PORT:
-        client.connect((system_ip, data.data))
+        try:
+            client.connect((system_ip, data.data))
+        except socket.error:
+            print("cannot connect in the client socket")
+            # break here
+            exit(1)
 
+#ADD IN CLOSING SOCKETS
     # while True:
     #     pass
         # print(client.recv(1024))
