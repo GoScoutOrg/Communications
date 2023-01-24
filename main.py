@@ -21,7 +21,7 @@ def server_proc(q, system_ip, connect_ip, port):
     if(x == 0):
         x = server.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-    server_data = (system_ip, 0) # Setting port = 0 lets os designate a port
+    server_data = (system_ip, port) # Setting port = 0 lets os designate a port
     server.bind(server_data)
 
     server.listen()
