@@ -14,6 +14,7 @@ COMMAND_SERVER_PORT = 0x1
 connections = {}
 
 def server_proc(q, system_ip, connect_ip, port):
+    print("im in the server")
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # check and turn on TCP Keepalive
@@ -40,6 +41,7 @@ def server_proc(q, system_ip, connect_ip, port):
             return
 
 def client_proc(q, system_ip, connect_ip, port):
+    print ("im in the client")
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     x = client.getsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE)
     if(x == 0):
@@ -55,14 +57,14 @@ def client_proc(q, system_ip, connect_ip, port):
             return
         except ConnectionRefusedError:
             pass
-    while True:
-        try:
-            s = "Hello?"
-            print('sending')
-            client.send(s.encode())
-        except KeyboardInterrupt:
-            client.close()
-            return
+#  while True:
+    try:
+        s = "Hello?"
+        print('sending')
+        client.send(s.encode())
+    except KeyboardInterrupt:
+        client.close()
+        return
 
 
 def main() -> None:
