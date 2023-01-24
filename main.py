@@ -24,6 +24,8 @@ def server_proc(q, system_ip, connect_ip):
     server_data = (system_ip, 7777) # Setting port = 0 lets os designate a port
     server.bind(server_data)
 
+    # server.setblocking(False)
+
     server.listen()
 
     print("Server initialized: ", server)
@@ -43,10 +45,14 @@ def client_proc(q, system_ip, connect_ip):
     while True:
         try:
             client.connect(client_data);
-            print("connected")
             break
         except:
             pass
+    while True:
+        s = input("Enter data: ")
+        print('sending')
+        client.send(s.encode())
+    return
 
 
 def main() -> None:
