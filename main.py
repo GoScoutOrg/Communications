@@ -12,9 +12,8 @@ class CommuncationPacket:
 COMMAND_SERVER_PORT = 0x1
 
 connections = {}
-system_ip = ""
 
-def server_proc(q):
+def server_proc(q, system_ip, connect_ip):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # check and turn on TCP Keepalive
@@ -22,13 +21,10 @@ def server_proc(q):
     if(x == 0):
         x = server.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-    server_data = (system_ip, 0) # Setting port = 0 lets os designate a port
+    server_data = (system_ip, 7777) # Setting port = 0 lets os designate a port
     server.bind(server_data)
 
     server.listen()
-
-    server_port = server.getsockname()[1]
-    q.put(CommuncationPacket(False, True, COMMAND_SERVER_PORT, server_port))
 
     print("Server initialized: ", server)
 
@@ -37,48 +33,41 @@ def server_proc(q):
         print("Incoming connection from ", addr)
         connections[addr] = client_connection
 
-def client_proc(q):
+def client_proc(q, system_ip, connect_ip):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     x = client.getsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE)
     if(x == 0):
         x = client.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-    client_data = (system_ip, 0)
-
-    while q.empty():
-        pass
-    data = q.get()
-    if data.isServer and data.command & COMMAND_SERVER_PORT == COMMAND_SERVER_PORT:
+    client_data = (connect_ip, 7777)
+    while True:
         try:
-            client.connect((system_ip, data.data))
-        except socket.error:
-            print("cannot connect in the client socket")
-            # break here
-            exit(1)
+            client.connect(client_data);
+            print("connected")
+            break
+        except:
+            pass
 
-#ADD IN CLOSING SOCKETS
-    # while True:
-    #     pass
-        # print(client.recv(1024))
-        # print("reading")
-        # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue.get
-        # while q.empty():
-        #     pass
-        # data = q.get(False);
-        # print(data)
 
 def main() -> None:
-    if (len(sys.argv) - 1 <= 0):
+    if (len(sys.argv) - 2 <= 0):
+        print("Usage: python3 main.py [system ip] [connection ip]")
         return
     args = sys.argv[1:]
 
     system_ip = args[0]
+    connect_ip = args[1]
+    if len(system_ip.split('.')) != 4 or len(connect_ip.split('.')) != 4:
+        print("Usage: python3 main.py [system ip] [connection ip]")
+        return
+
     print("Initializing system IP: ", system_ip)
+    print("Initializing connection IP: ", connect_ip)
 
     q = Queue()
 
-    server = Process(target=server_proc, args=(q,))
-    client = Process(target=client_proc, args=(q,))
+    server = Process(target=server_proc, args=(q, system_ip, connect_ip))
+    client = Process(target=client_proc, args=(q, system_ip, connect_ip))
 
     server.start()
     client.start()
