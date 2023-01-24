@@ -51,7 +51,7 @@ def client_proc(q, system_ip, connect_ip, port):
     while True:
         try:
             client.connect(client_data);
-            # print("connected to the server")
+            print("connected to the server")
             break
         except KeyboardInterrupt:
             client.close()
