@@ -32,7 +32,7 @@ def server_proc(q):
         connections[addr] = client_connection
 
 def client_proc(q):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_data = (system_ip, 0)
 
     while q.empty():
@@ -56,10 +56,10 @@ def main() -> None:
         return
     args = sys.argv[1:]
 
-    system_ip = args[0];
+    system_ip = args[0]
     print("Initializing system IP: ", system_ip)
 
-    q = Queue();
+    q = Queue()
 
     server = Process(target=server_proc, args=(q,))
     client = Process(target=client_proc, args=(q,))
@@ -72,4 +72,4 @@ def main() -> None:
     return
 
 if __name__ == "__main__":
-    main();
+    main()
