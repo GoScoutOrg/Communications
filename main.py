@@ -46,6 +46,7 @@ def client_proc(q, system_ip, connect_ip, port):
     client_data = (connect_ip, port)
     # client.bind((system_ip, port))
     print("client initialized: ", client)
+    print("connecting to: ", client_data)
 
     while True:
         try:
