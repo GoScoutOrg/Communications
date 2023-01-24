@@ -46,6 +46,9 @@ def client_proc(q, system_ip, connect_ip, port):
         x = client.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
     client_data = (connect_ip, port)
+
+    print("client initialized: ", client)
+
     while True:
         try:
             client.connect(client_data);
