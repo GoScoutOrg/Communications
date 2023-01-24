@@ -21,7 +21,7 @@ def server_proc(q, system_ip, connect_ip, port):
     if(x == 0):
         x = server.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-    server_data = (system_ip, port) # Setting port = 0 lets os designate a port
+    server_data = (system_ip, 0) # Setting port = 0 lets os designate a port
     server.bind(server_data)
 
     server.listen()
@@ -43,14 +43,14 @@ def client_proc(q, system_ip, connect_ip, port):
     if(x == 0):
         x = client.setsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-    client_data = (connect_ip, port)
+    client_data = (connect_ip, 0)
     client.bind((system_ip, port))
     print("client initialized: ", client)
 
     while True:
         try:
             client.connect(client_data);
-            print("connected to the server")
+            # print("connected to the server")
             break
         except KeyboardInterrupt:
             client.close()
@@ -58,13 +58,13 @@ def client_proc(q, system_ip, connect_ip, port):
         except ConnectionRefusedError:
             pass
 #  while True:
-    try:
-        s = "Hello?"
-        print('sending')
-        client.send(s.encode())
-    except KeyboardInterrupt:
-        client.close()
-        return
+    # try:
+    #     s = "Hello?"
+    #     print('sending')
+    #     client.send(s.encode())
+    # except KeyboardInterrupt:
+    #     client.close()
+    #     return
 
 
 def main() -> None:
