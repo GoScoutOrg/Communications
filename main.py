@@ -1,6 +1,7 @@
-import sys, os
+import sys, os, signal
 import socket
 import PDU
+from collections.abc import Callable
 from multiprocessing import Process, Queue
 
 USAGE = "Usage: python3 main.py [system ip] [connection ip] [port]"
@@ -30,13 +31,23 @@ def send_PDU(socket, flag, src_ip):
     return
 
 class ProcCommunicationPacket:
-    def __init__(self, to_pid, from_pid, command, data):
+    def __init__(self, to_pid, from_pid, command):
         self.to_pid = to_pid
         self.from_pid = from_pid
         self.command = command
-        self.data = data
 
-def server_proc(q, system_ip, connect_ip, port):
+COMMAND_ERROR = 0x1
+
+RETURN_SUCCESS = 0x0
+RETURN_ERROR = 0x1
+
+def checkFunctionValidity(function_set : dict[str, Callable]) -> bool:
+    return function_set != None
+
+def server_proc(q : Queue, system_ip : str, port : int, function_set : dict) -> int:
+    if not checkFunctionValidity(function_set):
+        sys.exit("SERVER: function validity error")
+
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # check and turn on TCP Keepalive
@@ -60,16 +71,19 @@ def server_proc(q, system_ip, connect_ip, port):
             awaiting_connection = False
         except KeyboardInterrupt:
             server.close()
-            return
+            return RETURN_ERROR
     while True:
         data = client_connection.recv(BUFFER_SIZE)
         if data:
             print(data)
             break
-    return
+    return RETURN_SUCCESS
 
 
-def client_proc(q, system_ip, connect_ip, port):
+def client_proc(q : Queue, connect_ip : str, port : int, function_set : dict) -> int:
+    if not checkFunctionValidity(function_set):
+        sys.exit("CLIENT: function validity error")
+
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     x = client.getsockopt( socket.SOL_SOCKET, socket.SO_KEEPALIVE)
     if(x == 0):
@@ -86,51 +100,56 @@ def client_proc(q, system_ip, connect_ip, port):
             break
         except KeyboardInterrupt:
             client.close()
-            return
+            return RETURN_ERROR
         except ConnectionRefusedError:
             pass
 
     client.send(b'hello, world! From client')
-    return
+    return RETURN_SUCCESS
 
 def main() -> None:
     if (len(sys.argv) - 4 <= 0):
-        print(USAGE)
-        return
+        sys.exit(USAGE)
     args = sys.argv[1:]
 
     system_ip = args[0]
     connect_ip = args[1]
     if len(system_ip.split('.')) != 4 or len(connect_ip.split('.')) != 4:
-        print(USAGE)
-        return
+        sys.exit(USAGE)
     system_port = args[2]
     client_port = args[3]
     if not system_port.isnumeric() or not client_port.isnumeric():
-        print(USAGE)
-        return
+        sys.exit(USAGE)
     else:
         system_port = int(system_port)
         client_port = int(client_port)
         if (system_port < 1024 or system_port > 49151) or (client_port < 1024 or client_port > 49151):
-            print(USAGE)
-            return
+            sys.exit(USAGE)
 
     print("Initializing system network: ", system_ip, system_port)
     print("Initializing connection network: ", connect_ip, client_port)
 
+    function_set = {
+        "MOVE": lambda : print("MOVE"),
+        "ROTATE": lambda : print("ROTATE"),
+    }
+
     q = Queue()
 
-    server = Process(target=server_proc, args=(q, system_ip, connect_ip, system_port))
-    client = Process(target=client_proc, args=(q, system_ip, connect_ip, client_port))
+    server = Process(target=server_proc, args=(q, system_ip, system_port, function_set))
+    client = Process(target=client_proc, args=(q, connect_ip, client_port, function_set))
 
     server.start()
     client.start()
 
-    client.join()
-    print("Client done")
-    server.join()
-    print("Server done")
+    clients_running = 0x0 # --> 0x11 = 0x01 | 0x10
+    while clients_running != 0x11:
+        client.join(timeout=1)
+        if not client.is_alive():
+            clients_running |= 0x01
+        server.join(timeout=1)
+        if not server.is_alive():
+            clients_running |= 0x10
 
     print("Parent done")
 
