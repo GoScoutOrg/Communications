@@ -1,18 +1,16 @@
-import sys
+import sys, os
 import socket
 import PDU
 from multiprocessing import Process, Queue
 
+BUFFER_SIZE = 1024
+
 class CommuncationPacket:
-    def __init__(self, isRoot, isServer, command, data):
-        self.isRoot = isRoot
-        self.isServer = isServer
+    def __init__(self, to_pid, from_pid, command, data):
+        self.to_pid = to_pid
+        self.from_pid = from_pid
         self.command = command
         self.data = data
-
-COMMAND_SERVER_PORT = 0x1
-
-connections = {}
 
 def server_proc(q, system_ip, connect_ip, port):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,14 +27,24 @@ def server_proc(q, system_ip, connect_ip, port):
 
     print("Server initialized: ", server)
 
-    while True:
+    client_connection = addr = socket.socket() #Initialize as an empty socket
+    awaiting_connection = True
+    while awaiting_connection:
         try:
             client_connection, addr = server.accept()
             print("Incoming connection from ", addr)
-            connections[addr] = client_connection
+            awaiting_connection = False
         except KeyboardInterrupt:
             server.close()
             return
+    while True:
+        print("recving")
+        data = client_connection.recv(BUFFER_SIZE)
+        if data:
+            print(data)
+            break
+    return
+
 
 def client_proc(q, system_ip, connect_ip, port):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -59,14 +67,10 @@ def client_proc(q, system_ip, connect_ip, port):
             return
         except ConnectionRefusedError:
             pass
-#  while True:
-    # try:
-    #     s = "Hello?"
-    #     print('sending')
-    #     client.send(s.encode())
-    # except KeyboardInterrupt:
-    #     client.close()
-    #     return
+
+    print("sending")
+    client.send(b'hello, world! From client')
+    return
 
 def socketToIP(s):
     return s.getpeername()[0]
@@ -103,30 +107,33 @@ def main() -> None:
     if len(system_ip.split('.')) != 4 or len(connect_ip.split('.')) != 4:
         print("Usage: python3 main.py [system ip] [connection ip] [port]")
         return
-    port_a = args[2]
-    port_b = args[3]
-    if not port_a.isnumeric() or not port_b.isnumeric():
+    system_port = args[2]
+    client_port = args[3]
+    if not system_port.isnumeric() or not client_port.isnumeric():
         print("Usage: python3 main.py [system ip] [connection ip] [port]")
         return
     else:
-        port_a = int(port_a)
-        port_b = int(port_b)
-        if (port_a < 1024 or port_a > 49151) or (port_b < 1024 or port_b > 49151):
+        system_port = int(system_port)
+        client_port = int(client_port)
+        if (system_port < 1024 or system_port > 49151) or (client_port < 1024 or client_port > 49151):
             print("Usage: python3 main.py [system ip] [connection ip] [port]")
             return
 
-    print("Initializing system IP: ", system_ip)
-    print("Initializing system port: ", port_a)
-    print("Initializing connection IP: ", connect_ip)
-    print("Initializing connection IP: ", port_b)
+    print("Initializing system network: ", system_ip, system_port)
+    print("Initializing connection network: ", connect_ip, client_port)
 
     q = Queue()
 
-    server = Process(target=server_proc, args=(q, system_ip, connect_ip, port_a))
-    client = Process(target=client_proc, args=(q, system_ip, connect_ip, port_b))
+    server = Process(target=server_proc, args=(q, system_ip, connect_ip, system_port))
+    client = Process(target=client_proc, args=(q, system_ip, connect_ip, client_port))
 
     server.start()
     client.start()
+
+    while True:
+        d = q.get()
+        if d != None:
+            print("got something")
 
     server.join()
     print("server done")
