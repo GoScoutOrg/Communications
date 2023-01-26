@@ -12,9 +12,6 @@ class FlagConstants(Flag):
     ACK = 0x3
     CLOSE = 0x4
 
-    # Command flags
-    MOVE = 0x5
-    ROTATE = 0x6
 
 class GSPacket:
     def __init__(self,
