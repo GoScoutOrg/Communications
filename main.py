@@ -211,10 +211,14 @@ def main() -> None:
         "ROTATE": lambda : print("ROTATE"),
     }
 
-    coms = Communications(system_ip, system_port, connect_ip, client_port, function_set)
-    coms.start()
-    sleep(1)
-    coms.stop()
+    communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
+    communications.start()
+    communications.join()
+
+    # coms = Communications(system_ip, system_port, connect_ip, client_port, function_set)
+    # coms.start()
+    # sleep(1)
+    # coms.stop()
     # coms.stop()
     # coms = open_communications(system_ip, system_port, connect_ip, client_port, function_set)
     # print(coms)
