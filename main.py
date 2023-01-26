@@ -45,7 +45,7 @@ COMMAND_ERROR = 0x1
 RETURN_SUCCESS = 0x0
 RETURN_ERROR = 0x1
 
-def checkFunctionValidity(function_set : dict[str, Callable]) -> bool:
+def checkFunctionValidity(function_set) -> bool:
     # Check to see that the function set has at least 1 key
     return len(function_set.keys()) >= 1
 
@@ -136,10 +136,10 @@ def parent_proc(system_ip : str, system_port : int, connection_ip : str, connect
 
 
 # START API FUNCTIONS
-coms = None;
+coms = None
 class Communications:
     def __init__(self, system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict):
-        self.system_ip = system_ip;
+        self.system_ip = system_ip
         self.system_port = system_port
         self.connection_ip = connection_ip
         self.connection_port = connection_port
@@ -148,7 +148,7 @@ class Communications:
         self.running = False
 
     def start(self):
-        self.running = True;
+        self.running = True
         coms = Process(target=parent_proc, args=(self.system_ip, self.system_port, self.connection_ip, self.connection_port, self.function_set))
         coms.start()
         # self.communications = Process(target=parent_proc, args=(self.system_ip, self.system_port, self.connection_ip, self.connection_port, self.function_set))
@@ -160,6 +160,7 @@ class Communications:
         # self.communications.join(timeout=1)
 
     def stop(self):
+        pass
         # signal.signal(signal.SIGTERM, self.communiations)
         # coms.terminate()
         # coms.close()
