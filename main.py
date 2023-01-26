@@ -1,5 +1,6 @@
 import sys, os, signal
 import socket
+from time import sleep
 import PDU
 from collections.abc import Callable
 from multiprocessing import Process, Queue
@@ -45,7 +46,8 @@ RETURN_SUCCESS = 0x0
 RETURN_ERROR = 0x1
 
 def checkFunctionValidity(function_set : dict[str, Callable]) -> bool:
-    return function_set != None
+    # Check to see that the function set has at least 1 key
+    return len(function_set.keys()) >= 1
 
 def server_proc(q : Queue, system_ip : str, port : int, function_set : dict) -> int:
     if not checkFunctionValidity(function_set):
@@ -110,6 +112,80 @@ def client_proc(q : Queue, connect_ip : str, port : int, function_set : dict) ->
     client.send(b'hello, world! From client')
     return RETURN_SUCCESS
 
+def parent_proc(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict) -> None:
+    print("Initializing system network: ", system_ip, system_port)
+    print("Initializing connection network: ", connection_ip, connection_port)
+
+    q = Queue()
+
+    server = Process(target=server_proc, args=(q, system_ip, system_port, function_set), daemon=True)
+    client = Process(target=client_proc, args=(q, connection_ip, connection_port, function_set), daemon=True)
+
+    server.start()
+    client.start()
+
+    clients_running = 0x0 # --> 0x11 = 0x01 | 0x10
+    while clients_running != 0x11:
+        client.join(timeout=1)
+        if not client.is_alive():
+            clients_running |= 0x01
+        server.join(timeout=1)
+        if not server.is_alive():
+            clients_running |= 0x10
+    return
+
+
+# START API FUNCTIONS
+coms = None;
+class Communications:
+    def __init__(self, system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict):
+        self.system_ip = system_ip;
+        self.system_port = system_port
+        self.connection_ip = connection_ip
+        self.connection_port = connection_port
+        self.function_set = function_set
+        self.communiations = None
+        self.running = False
+
+    def start(self):
+        self.running = True;
+        coms = Process(target=parent_proc, args=(self.system_ip, self.system_port, self.connection_ip, self.connection_port, self.function_set))
+        coms.start()
+        # self.communications = Process(target=parent_proc, args=(self.system_ip, self.system_port, self.connection_ip, self.connection_port, self.function_set))
+        # self.communications.start()
+        # print(self.communications.pid)
+        # self.communications.terminate();
+        # self.communications.join();
+        # self.communications.close();
+        # self.communications.join(timeout=1)
+
+    def stop(self):
+        # signal.signal(signal.SIGTERM, self.communiations)
+        # coms.terminate()
+        # coms.close()
+        # signal.signal(signal.SIGTERM, self.communications.pid)
+        # print("stopping")
+        # test = self.communications.pid
+        # os.kill(test, signal.SIGTERM)
+        # self.communications.terminate();
+        # self.communications.join();
+        # self.communications.close();
+
+
+# communications = Process()
+# test = 'hello'
+# def open_communications(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict):
+#     communications = Process(target=parent_proc, args=(system_ip, system_port, connection_ip, connection_port, function_set))
+#     communications.start()
+#     print(test)
+#     return 
+#
+# def close_communications() -> None:
+#     communications.terminate()
+#     communications.close()
+#     print(test)
+# END API FUNCTIONS
+
 def main() -> None:
     if (len(sys.argv) - 4 <= 0):
         sys.exit(USAGE)
@@ -129,32 +205,20 @@ def main() -> None:
         if (system_port < 1024 or system_port > 49151) or (client_port < 1024 or client_port > 49151):
             sys.exit(USAGE)
 
-    print("Initializing system network: ", system_ip, system_port)
-    print("Initializing connection network: ", connect_ip, client_port)
-
     function_set = {
         "MOVE": lambda : print("MOVE"),
         "ROTATE": lambda : print("ROTATE"),
     }
 
-    q = Queue()
-
-    server = Process(target=server_proc, args=(q, system_ip, system_port, function_set))
-    client = Process(target=client_proc, args=(q, connect_ip, client_port, function_set))
-
-    server.start()
-    client.start()
-
-    clients_running = 0x0 # --> 0x11 = 0x01 | 0x10
-    while clients_running != 0x11:
-        client.join(timeout=1)
-        if not client.is_alive():
-            clients_running |= 0x01
-        server.join(timeout=1)
-        if not server.is_alive():
-            clients_running |= 0x10
-
-    print("Parent done")
+    coms = Communications(system_ip, system_port, connect_ip, client_port, function_set)
+    coms.start()
+    sleep(1)
+    coms.stop()
+    # coms.stop()
+    # coms = open_communications(system_ip, system_port, connect_ip, client_port, function_set)
+    # print(coms)
+    # sleep(2)
+    # close_communications()
 
     return
 
