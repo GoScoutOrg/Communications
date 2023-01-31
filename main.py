@@ -8,28 +8,28 @@ import json
 USAGE = "Usage: python3 main.py [system ip] [connection ip] [port]"
 BUFFER_SIZE = 1024
 
-# def socketToIP(s : socket.socket):
-#     return s.getpeername()[0]
+def socketToIP(s : socket.socket):
+    return s.getpeername()[0]
 
-# def send_PDU(socket : socket.socket, flag, src_ip, payload):
-#     # packet = PDU.GSPacket(flag, src_ip, socketToIP(socket), payload).compress()
-#     packet = None
-#     if flag == PDU.FlagConstants.EXECUTION.value:
-#         packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
-#     elif flag == PDU.FlagConstants.ACK.value:
-#         packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
-#     elif flag == PDU.FlagConstants.LOCATION.value:
-#         packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, payload).compress()
-#     elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
-#         packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
-#
-#     if packet:
-#         socket.send(packet)
-#         print("Sent a PDU with flag:", flag,  "src_ip:", src_ip, "payload", payload )
-#     else:   
-#         print("no valid packet")
-#         return -1
-#     return
+def send_PDU(socket : socket.socket, flag, src_ip, payload):
+    # packet = PDU.GSPacket(flag, src_ip, socketToIP(socket), payload).compress()
+    packet = None
+    if flag == PDU.FlagConstants.EXECUTION.value:
+        packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
+    elif flag == PDU.FlagConstants.ACK.value:
+        packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
+    elif flag == PDU.FlagConstants.LOCATION.value:
+        packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, payload).compress()
+    elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
+        packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
+
+    if packet:
+        socket.send(packet)
+        print("Sent a PDU with flag:", flag,  "src_ip:", src_ip, "payload", payload )
+    else:   
+        print("no valid packet")
+        return -1
+    return
 
 class ProcCommunicationPacket:
     def __init__(self, to_pid, from_pid, command):
@@ -79,9 +79,12 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
         data = client_connection.recv(BUFFER_SIZE)
         if data:
             packet = data.decode("utf-8")
-            # print(data)
-            # packet = PDU.decompress(data)
             print("RECV", packet)
+            func_to_run = function_set.get(packet[0])
+            print("running", packet)
+            if func_to_run:
+                pass
+                # function_set.get(pack
     return RETURN_SUCCESS
 
 
@@ -111,20 +114,8 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     while True:
         pipe_data = pipe.recv()
         if pipe_data:
-            # flag = pipe_data[ 0 ]
-            # data = pipe_data[ 1 ]
             test = str(json.dumps(pipe_data))
-            print(test)
             client.send(bytes(test,encoding="utf-8"))
-            # send_PDU(client, flag, connect_ip, data)
-            # client.send(b'hello, world! From client')
-            # break
-    #FOR PDU SEND TESTING PURPOSES
-    # gps_info = "gps info\n"
-    # send_PDU(client, PDU.FlagConstants.LOCATION.value, connect_ip, gps_info)
-    #
-    #
-    # client.send(b'hello, world! From client')
     return RETURN_SUCCESS
 
 # is_initialized = False
@@ -192,8 +183,11 @@ def main() -> None:
     communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
     communications.start()
 
-    sleep(1)
-    send_packet("GPS", "192:145")
+    # sleep(1)
+    # send_packet("GPS", "192:145")
+    flag = input("Input flag ")
+    data = input("Input data: ")
+    send_packet(flag, data)
 
     communications.join()
 
