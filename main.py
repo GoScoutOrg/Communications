@@ -77,7 +77,7 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
 
     while True:
         data = client_connection.recv(BUFFER_SIZE)
-        print("data", data)
+        print("data", data, data[0])
         if data:
             packet = list(data.decode("utf-8"))
             print("RECV", packet)
