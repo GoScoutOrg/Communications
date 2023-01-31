@@ -110,7 +110,7 @@ def client_proc(q : Queue, connect_ip : str, port : int, function_set : dict) ->
 
     #FOR PDU SEND TESTING PURPOSES
     gps_info = "gps info\n"
-    send_PDU(client, PDU.FlagConstants.LOCATION, connect_ip, gps_info)
+    send_PDU(client, PDU.FlagConstants.LOCATION.value, connect_ip, gps_info)
 
 
     client.send(b'hello, world! From client')
