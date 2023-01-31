@@ -3,32 +3,33 @@ import socket
 import PDU
 from multiprocessing import Process, Queue, Pipe
 from time import sleep
+import json
 
 USAGE = "Usage: python3 main.py [system ip] [connection ip] [port]"
 BUFFER_SIZE = 1024
 
-def socketToIP(s : socket.socket):
-    return s.getpeername()[0]
+# def socketToIP(s : socket.socket):
+#     return s.getpeername()[0]
 
-def send_PDU(socket : socket.socket, flag, src_ip, payload):
-    packet = PDU.GSPacket(flag, src_ip, socketToIP(socket), payload).compress()
-    # packet = None
-    # if flag == PDU.FlagConstants.EXECUTION.value:
-    #     packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
-    # elif flag == PDU.FlagConstants.ACK.value:
-    #     packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
-    # elif flag == PDU.FlagConstants.LOCATION.value:
-    #     packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, payload).compress()
-    # elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
-    #     packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
-
-    if packet:
-        socket.send(packet)
-        print("Sent a PDU with flag:", flag,  "src_ip:", src_ip, "payload", payload )
-    else:   
-        print("no valid packet")
-        return -1
-    return
+# def send_PDU(socket : socket.socket, flag, src_ip, payload):
+#     # packet = PDU.GSPacket(flag, src_ip, socketToIP(socket), payload).compress()
+#     packet = None
+#     if flag == PDU.FlagConstants.EXECUTION.value:
+#         packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
+#     elif flag == PDU.FlagConstants.ACK.value:
+#         packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
+#     elif flag == PDU.FlagConstants.LOCATION.value:
+#         packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, payload).compress()
+#     elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
+#         packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
+#
+#     if packet:
+#         socket.send(packet)
+#         print("Sent a PDU with flag:", flag,  "src_ip:", src_ip, "payload", payload )
+#     else:   
+#         print("no valid packet")
+#         return -1
+#     return
 
 class ProcCommunicationPacket:
     def __init__(self, to_pid, from_pid, command):
@@ -75,14 +76,11 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
             return RETURN_ERROR
 
     while True:
-        # data = pipe.recv()
-        # if data:
-        #     print(data)
-        #     break
         data = client_connection.recv(BUFFER_SIZE)
         if data:
+            packet = data.decode("utf-8")
             # print(data)
-            packet = PDU.decompress(data)
+            # packet = PDU.decompress(data)
             print("RECV", packet)
     return RETURN_SUCCESS
 
@@ -113,11 +111,13 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     while True:
         pipe_data = pipe.recv()
         if pipe_data:
-            flag = pipe_data[ 0 ]
-            data = pipe_data[ 1 ]
-            send_PDU(client, flag, connect_ip, data)
+            # flag = pipe_data[ 0 ]
+            # data = pipe_data[ 1 ]
+            test = str(json.dumps(pipe_data))
+            print(test)
+            client.send(bytes(test,encoding="utf-8"))
+            # send_PDU(client, flag, connect_ip, data)
             # client.send(b'hello, world! From client')
-            print(flag,data)
             # break
     #FOR PDU SEND TESTING PURPOSES
     # gps_info = "gps info\n"
