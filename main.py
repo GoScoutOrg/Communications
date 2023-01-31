@@ -79,6 +79,8 @@ def server_proc(q : Queue, system_ip : str, port : int, function_set : dict) -> 
     while True:
         data = client_connection.recv(BUFFER_SIZE)
         if data:
+            packet = PDU.decompress(data)
+            print("RECV", packet)
             print(data)
             break
     return RETURN_SUCCESS
