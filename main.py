@@ -74,13 +74,17 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
             return RETURN_ERROR
 
     while True:
-        pass
-        # data = client_connection.recv(BUFFER_SIZE)
+        # data = pipe.recv()
         # if data:
-        #     packet = PDU.decompress(data)
-        #     print("RECV", packet)
         #     print(data)
         #     break
+        data = client_connection.recv(BUFFER_SIZE)
+        if data:
+            print(data)
+            # packet = PDU.decompress(data)
+            # print("RECV", packet)
+            # print(data)
+            # break
     return RETURN_SUCCESS
 
 
@@ -97,20 +101,25 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     print("CLIENT:\tInitialized: ", client)
     print("CLIENT:\tConnecting to: ", client_data)
 
+    # while True:
+    #     try:
+    #         client.connect(client_data)
+    #         print("connected to the server")
+    #         break
+    #     except KeyboardInterrupt:
+    #         client.close()
+    #         return RETURN_ERROR
+    #     except ConnectionRefusedError:
+    #         pass
     while True:
-        try:
-            client.connect(client_data)
-            print("connected to the server")
-            break
-        except KeyboardInterrupt:
-            client.close()
-            return RETURN_ERROR
-        except ConnectionRefusedError:
-            pass
-
-    while True:
-        test = pipe.recv()
-        print(test);
+        pipe_data = pipe.recv()
+        if pipe_data:
+            flag = pipe_data[ 0 ]
+            data = pipe_data[ 1 ]
+            # send_PDU(client, PDU.FlagConstants.LOCATION.value, connect_ip, gps_info)
+            client.send(b'hello, world! From client')
+            print(flag,data)
+            # break
     #FOR PDU SEND TESTING PURPOSES
     # gps_info = "gps info\n"
     # send_PDU(client, PDU.FlagConstants.LOCATION.value, connect_ip, gps_info)
@@ -119,21 +128,18 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     # client.send(b'hello, world! From client')
     return RETURN_SUCCESS
 
+# is_initialized = False
+server_parent_end, server_child_end = Pipe()
+client_parent_end, client_child_end = Pipe()
 def parent_proc(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict) -> None:
     print("Initializing system network: ", system_ip, system_port)
     print("Initializing connection network: ", connection_ip, connection_port)
 
-    server_parent_end, server_child_end = Pipe()
     server = Process(target=server_proc, args=(server_child_end, system_ip, system_port, function_set), daemon=True)
-    client_parent_end, client_child_end = Pipe()
     client = Process(target=client_proc, args=(client_child_end, connection_ip, connection_port, function_set), daemon=True)
 
     server.start()
     client.start()
-
-    sleep(2)
-
-    server_parent_end.send("Hello")
 
     clients_running = 0x0 # --> 0x11 = 0x01 | 0x10
     while clients_running != 0x11:
@@ -148,11 +154,16 @@ def parent_proc(system_ip : str, system_port : int, connection_ip : str, connect
 
 # START API FUNCTIONS
 def open_communications(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict):
-    communications = Process(target=parent_proc, args=(system_ip, system_port, connection_ip, connection_port, function_set))
-    communications.start()
+    # if is_initialized:
+    #     sys.exit("Communications already initialized")
+    # communications = Process(target=parent_proc, args=(system_ip, system_port, connection_ip, connection_port, function_set))
+    # communications.start()
     return 
 
-# def send_packet(flag : str, data : str):
+def send_packet(flag : str, data : str):
+    # if not is_initialized:
+    #     sys.exit("Communications NOT Initialized. Please call open_communications function before")
+    client_parent_end.send((flag, data))
 
 # END API FUNCTIONS
 
@@ -176,11 +187,15 @@ def main() -> None:
             sys.exit(USAGE)
 
     function_set = {
-        1: 7
+        "GPS": lambda : print("GPS"),
     }
 
     communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
     communications.start()
+
+    sleep(10)
+    send_packet("GPS", "192:145")
+
     communications.join()
 
     return
