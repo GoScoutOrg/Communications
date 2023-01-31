@@ -1,20 +1,17 @@
 import sys 
 import socket
 import PDU
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Pipe
+from time import sleep
 
 USAGE = "Usage: python3 main.py [system ip] [connection ip] [port]"
 BUFFER_SIZE = 1024
 
-def socketToIP(s):
+def socketToIP(s : socket.socket):
     return s.getpeername()[0]
 
-def send_PDU(socket, flag, src_ip, payload):
-    # grab GPS info 
-    
-
+def send_PDU(socket : socket.socket, flag, src_ip, payload):
     packet = None
-    
     if flag == PDU.FlagConstants.EXECUTION.value:
         packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
     elif flag == PDU.FlagConstants.ACK.value:
@@ -24,10 +21,9 @@ def send_PDU(socket, flag, src_ip, payload):
     elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
         packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
 
-
     if packet:
         socket.send(packet)
-        print("sent a PDU with flag:", flag,  "src_ip:", src_ip, "payload", payload )
+        print("Sent a PDU with flag:", flag,  "src_ip:", src_ip, "payload", payload )
     else:   
         print("no valid packet")
         return -1
@@ -48,7 +44,7 @@ def checkFunctionValidity(function_set) -> bool:
     # Check to see that the function set has at least 1 key
     return len(function_set.keys()) >= 1
 
-def server_proc(q : Queue, system_ip : str, port : int, function_set : dict) -> int:
+def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
     if not checkFunctionValidity(function_set):
         sys.exit("SERVER: function validity error")
 
@@ -76,17 +72,19 @@ def server_proc(q : Queue, system_ip : str, port : int, function_set : dict) -> 
         except KeyboardInterrupt:
             server.close()
             return RETURN_ERROR
+
     while True:
-        data = client_connection.recv(BUFFER_SIZE)
-        if data:
-            packet = PDU.decompress(data)
-            print("RECV", packet)
-            print(data)
-            break
+        pass
+        # data = client_connection.recv(BUFFER_SIZE)
+        # if data:
+        #     packet = PDU.decompress(data)
+        #     print("RECV", packet)
+        #     print(data)
+        #     break
     return RETURN_SUCCESS
 
 
-def client_proc(q : Queue, connect_ip : str, port : int, function_set : dict) -> int:
+def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     if not checkFunctionValidity(function_set):
         sys.exit("CLIENT: function validity error")
 
@@ -110,25 +108,32 @@ def client_proc(q : Queue, connect_ip : str, port : int, function_set : dict) ->
         except ConnectionRefusedError:
             pass
 
+    while True:
+        test = pipe.recv()
+        print(test);
     #FOR PDU SEND TESTING PURPOSES
-    gps_info = "gps info\n"
-    send_PDU(client, PDU.FlagConstants.LOCATION.value, connect_ip, gps_info)
-
-
-    client.send(b'hello, world! From client')
+    # gps_info = "gps info\n"
+    # send_PDU(client, PDU.FlagConstants.LOCATION.value, connect_ip, gps_info)
+    #
+    #
+    # client.send(b'hello, world! From client')
     return RETURN_SUCCESS
 
 def parent_proc(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict) -> None:
     print("Initializing system network: ", system_ip, system_port)
     print("Initializing connection network: ", connection_ip, connection_port)
 
-    q = Queue()
-
-    server = Process(target=server_proc, args=(q, system_ip, system_port, function_set), daemon=True)
-    client = Process(target=client_proc, args=(q, connection_ip, connection_port, function_set), daemon=True)
+    server_parent_end, server_child_end = Pipe()
+    server = Process(target=server_proc, args=(server_child_end, system_ip, system_port, function_set), daemon=True)
+    client_parent_end, client_child_end = Pipe()
+    client = Process(target=client_proc, args=(client_child_end, connection_ip, connection_port, function_set), daemon=True)
 
     server.start()
     client.start()
+
+    sleep(2)
+
+    server_parent_end.send("Hello")
 
     clients_running = 0x0 # --> 0x11 = 0x01 | 0x10
     while clients_running != 0x11:
@@ -146,6 +151,9 @@ def open_communications(system_ip : str, system_port : int, connection_ip : str,
     communications = Process(target=parent_proc, args=(system_ip, system_port, connection_ip, connection_port, function_set))
     communications.start()
     return 
+
+# def send_packet(flag : str, data : str):
+
 # END API FUNCTIONS
 
 def main() -> None:
