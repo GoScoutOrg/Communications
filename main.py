@@ -11,9 +11,9 @@ BUFFER_SIZE = 1024
 def socketToIP(s):
     return s.getpeername()[0]
 
-def send_PDU(socket, flag, src_ip):
+def send_PDU(socket, flag, src_ip, payload):
     # grab GPS info 
-    gps_info = "gps info\n"
+    
 
     packet = None
     
@@ -22,13 +22,14 @@ def send_PDU(socket, flag, src_ip):
     elif flag == PDU.FlagConstants.ACK.value:
         packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
     elif flag == PDU.FlagConstants.LOCATION.value:
-        packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, gps_info).compress()
+        packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, payload).compress()
     elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
         packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
 
 
     if packet:
         socket.send(packet)
+        print("sent a PDU with flag:", flag,  "src_ip:", src_ip, "payload", payload )
     else:   
         print("no valid packet")
         return -1
@@ -108,6 +109,11 @@ def client_proc(q : Queue, connect_ip : str, port : int, function_set : dict) ->
             return RETURN_ERROR
         except ConnectionRefusedError:
             pass
+
+    #FOR PDU SEND TESTING PURPOSES
+    gps_info = "gps info\n"
+    send_PDU(client, PDU.FlagConstants.LOCATION, connect_ip, gps_info)
+
 
     client.send(b'hello, world! From client')
     return RETURN_SUCCESS
@@ -207,8 +213,9 @@ def main() -> None:
             sys.exit(USAGE)
 
     function_set = {
-        "MOVE": lambda : print("MOVE"),
-        "ROTATE": lambda : print("ROTATE"),
+        # "MOVE": lambda : print("MOVE"),
+        # "ROTATE": lambda : print("ROTATE"),
+        1: 7
     }
 
     communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
