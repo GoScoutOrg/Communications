@@ -101,16 +101,16 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     print("CLIENT:\tInitialized: ", client)
     print("CLIENT:\tConnecting to: ", client_data)
 
-    # while True:
-    #     try:
-    #         client.connect(client_data)
-    #         print("connected to the server")
-    #         break
-    #     except KeyboardInterrupt:
-    #         client.close()
-    #         return RETURN_ERROR
-    #     except ConnectionRefusedError:
-    #         pass
+    while True:
+        try:
+            client.connect(client_data)
+            print("connected to the server")
+            break
+        except KeyboardInterrupt:
+            client.close()
+            return RETURN_ERROR
+        except ConnectionRefusedError:
+            pass
     while True:
         pipe_data = pipe.recv()
         if pipe_data:
