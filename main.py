@@ -11,15 +11,16 @@ def socketToIP(s : socket.socket):
     return s.getpeername()[0]
 
 def send_PDU(socket : socket.socket, flag, src_ip, payload):
-    packet = None
-    if flag == PDU.FlagConstants.EXECUTION.value:
-        packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
-    elif flag == PDU.FlagConstants.ACK.value:
-        packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
-    elif flag == PDU.FlagConstants.LOCATION.value:
-        packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, payload).compress()
-    elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
-        packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
+    packet = PDU.GSPacket(flag, src_ip, socketToIP(socket), payload).compress()
+    # packet = None
+    # if flag == PDU.FlagConstants.EXECUTION.value:
+    #     packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
+    # elif flag == PDU.FlagConstants.ACK.value:
+    #     packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
+    # elif flag == PDU.FlagConstants.LOCATION.value:
+    #     packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, payload).compress()
+    # elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
+    #     packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
 
     if packet:
         socket.send(packet)
