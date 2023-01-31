@@ -80,6 +80,7 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
         if data:
             packet = data.decode("utf-8")
             print("RECV", packet)
+            print("Checking", function_set, packet[0])
             func_to_run = function_set.get(packet[0])
             print("running", func_to_run)
             if func_to_run:
