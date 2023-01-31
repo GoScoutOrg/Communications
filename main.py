@@ -80,11 +80,9 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
         #     break
         data = client_connection.recv(BUFFER_SIZE)
         if data:
-            print(data)
-            # packet = PDU.decompress(data)
-            # print("RECV", packet)
             # print(data)
-            # break
+            packet = PDU.decompress(data)
+            print("RECV", packet)
     return RETURN_SUCCESS
 
 
@@ -116,8 +114,8 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
         if pipe_data:
             flag = pipe_data[ 0 ]
             data = pipe_data[ 1 ]
-            # send_PDU(client, PDU.FlagConstants.LOCATION.value, connect_ip, gps_info)
-            client.send(b'hello, world! From client')
+            send_PDU(client, flag, connect_ip, data)
+            # client.send(b'hello, world! From client')
             print(flag,data)
             # break
     #FOR PDU SEND TESTING PURPOSES
@@ -193,7 +191,7 @@ def main() -> None:
     communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
     communications.start()
 
-    sleep(10)
+    sleep(1)
     send_packet("GPS", "192:145")
 
     communications.join()
