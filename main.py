@@ -81,7 +81,7 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
             packet = data.decode("utf-8")
             print("RECV", packet)
             func_to_run = function_set.get(packet[0])
-            print("running", packet)
+            print("running", func_to_run)
             if func_to_run:
                 pass
                 # function_set.get(pack
@@ -183,8 +183,7 @@ def main() -> None:
     communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
     communications.start()
 
-    # sleep(1)
-    # send_packet("GPS", "192:145")
+    sleep(2)
     flag = input("Input flag ")
     data = input("Input data: ")
     send_packet(flag, data)
