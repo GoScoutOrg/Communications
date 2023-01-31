@@ -1,8 +1,6 @@
-import sys, os, signal
+import sys 
 import socket
-from time import sleep
 import PDU
-from collections.abc import Callable
 from multiprocessing import Process, Queue
 
 USAGE = "Usage: python3 main.py [system ip] [connection ip] [port]"
@@ -142,55 +140,10 @@ def parent_proc(system_ip : str, system_port : int, connection_ip : str, connect
 
 
 # START API FUNCTIONS
-coms = None
-class Communications:
-    def __init__(self, system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict):
-        self.system_ip = system_ip
-        self.system_port = system_port
-        self.connection_ip = connection_ip
-        self.connection_port = connection_port
-        self.function_set = function_set
-        self.communiations = None
-        self.running = False
-
-    def start(self):
-        self.running = True
-        coms = Process(target=parent_proc, args=(self.system_ip, self.system_port, self.connection_ip, self.connection_port, self.function_set))
-        coms.start()
-        # self.communications = Process(target=parent_proc, args=(self.system_ip, self.system_port, self.connection_ip, self.connection_port, self.function_set))
-        # self.communications.start()
-        # print(self.communications.pid)
-        # self.communications.terminate();
-        # self.communications.join();
-        # self.communications.close();
-        # self.communications.join(timeout=1)
-
-    def stop(self):
-        pass
-        # signal.signal(signal.SIGTERM, self.communiations)
-        # coms.terminate()
-        # coms.close()
-        # signal.signal(signal.SIGTERM, self.communications.pid)
-        # print("stopping")
-        # test = self.communications.pid
-        # os.kill(test, signal.SIGTERM)
-        # self.communications.terminate();
-        # self.communications.join();
-        # self.communications.close();
-
-
-# communications = Process()
-# test = 'hello'
-# def open_communications(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict):
-#     communications = Process(target=parent_proc, args=(system_ip, system_port, connection_ip, connection_port, function_set))
-#     communications.start()
-#     print(test)
-#     return 
-#
-# def close_communications() -> None:
-#     communications.terminate()
-#     communications.close()
-#     print(test)
+def open_communications(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict):
+    communications = Process(target=parent_proc, args=(system_ip, system_port, connection_ip, connection_port, function_set))
+    communications.start()
+    return 
 # END API FUNCTIONS
 
 def main() -> None:
@@ -213,24 +166,12 @@ def main() -> None:
             sys.exit(USAGE)
 
     function_set = {
-        # "MOVE": lambda : print("MOVE"),
-        # "ROTATE": lambda : print("ROTATE"),
         1: 7
     }
 
     communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
     communications.start()
     communications.join()
-
-    # coms = Communications(system_ip, system_port, connect_ip, client_port, function_set)
-    # coms.start()
-    # sleep(1)
-    # coms.stop()
-    # coms.stop()
-    # coms = open_communications(system_ip, system_port, connect_ip, client_port, function_set)
-    # print(coms)
-    # sleep(2)
-    # close_communications()
 
     return
 
