@@ -150,7 +150,9 @@ def open_communications(system_ip : str, system_port : int, connection_ip : str,
 def send_packet(flag : str, data : str):
     # if not is_initialized:
     #     sys.exit("Communications NOT Initialized. Please call open_communications function before")
-    client_parent_end.send({flag: flag, data:data})
+    client_parent_end.send(
+            {"FLAG": flag, "DATA": data}
+            )
 
 # END API FUNCTIONS
 
