@@ -86,7 +86,7 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
                 args = function_set.get("ARGS") #args MUST be a list of the desired args
                 print("args", args)
                 if func_to_run and args:
-                        func_to_run(args)
+                    func_to_run(args)
                 elif func_to_run:
                     func_to_run()
                 else:
@@ -124,7 +124,8 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
         try:
             pipe_data = pipe.recv()
             if pipe_data:
-                client.send(bytes(json.dumps(pipe_data),encoding="utf-8"))
+                sending_data = json.dumps(pipe_data)
+                client.send(bytes(sending_data,encoding="utf-8"))
         except KeyboardInterrupt:
             client.close();
             return RETURN_ERROR
