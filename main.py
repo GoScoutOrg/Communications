@@ -79,6 +79,7 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
         try:
             data = client_connection.recv(BUFFER_SIZE)
             if data:
+                print("raw_data", data)
                 packet = json.loads(data.decode("utf-8"))
                 print("packet", packet)
                 func_to_run = function_set.get(packet.get("FLAG"))
@@ -125,6 +126,7 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
             pipe_data = pipe.recv()
             if pipe_data:
                 sending_data = json.dumps(pipe_data)
+                print(sending_data)
                 client.send(bytes(sending_data,encoding="utf-8"))
         except KeyboardInterrupt:
             client.close();
