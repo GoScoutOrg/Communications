@@ -81,6 +81,9 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
             packet = data.decode("utf-8")
             print(packet)
             print(type(packet))
+            test = json.loads(packet)
+            print(test)
+            print(type(test))
             # func_to_run = function_set.get(packet.get("FLAG"))
             # if func_to_run:
             #     func_to_run()
