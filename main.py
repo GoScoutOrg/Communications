@@ -80,11 +80,11 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
             data = client_connection.recv(BUFFER_SIZE)
             if data:
                 packet = json.loads(data.decode("utf-8"))
-                print(packet)
+                print("packet", packet)
                 func_to_run = function_set.get(packet.get("FLAG"))
-                print(func_to_run)
+                print("func", func_to_run)
                 args = function_set.get("ARGS") #args MUST be a list of the desired args
-                print(args)
+                print("args", args)
                 if func_to_run and args:
                         func_to_run(args)
                 elif func_to_run:
@@ -156,6 +156,7 @@ def parent_proc(system_ip : str, system_port : int, connection_ip : str, connect
 
 # START API FUNCTIONS
 def send_packet(flag : str, data : list[str]):
+    print("Sending: ", flag, data);
     client_parent_end.send({"FLAG": flag, "ARGS": data})
 # END API FUNCTIONS
 
