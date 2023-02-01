@@ -78,15 +78,10 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
     while True:
         data = client_connection.recv(BUFFER_SIZE)
         if data:
-            packet = data.decode("utf-8")
-            print(packet)
-            print(type(packet))
-            test = json.loads(packet)
-            print(test)
-            print(type(test))
-            # func_to_run = function_set.get(packet.get("FLAG"))
-            # if func_to_run:
-            #     func_to_run()
+            packet = json.loads(data.decode("utf-8"))
+            func_to_run = function_set.get(packet.get("FLAG"))
+            if func_to_run:
+                func_to_run()
     return RETURN_SUCCESS
 
 
