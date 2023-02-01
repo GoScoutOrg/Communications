@@ -79,9 +79,10 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
         data = client_connection.recv(BUFFER_SIZE)
         if data:
             packet = data.decode("utf-8")
-            func_to_run = function_set.get(packet[0])
-            if func_to_run:
-                func_to_run()
+            print(packet)
+            # func_to_run = function_set.get(packet[0])
+            # if func_to_run:
+            #     func_to_run()
     return RETURN_SUCCESS
 
 
@@ -111,8 +112,8 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     while True:
         pipe_data = pipe.recv()
         if pipe_data:
-            print(pipe_data)
-            # client.send(bytes(json.dumps(pipe_data),encoding="utf-8"))
+            # print(pipe_data)
+            client.send(bytes(json.dumps(pipe_data),encoding="utf-8"))
     return RETURN_SUCCESS
 
 # is_initialized = False
