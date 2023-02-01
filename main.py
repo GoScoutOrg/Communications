@@ -80,7 +80,8 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
         if data:
             packet = data.decode("utf-8")
             print(packet)
-            # func_to_run = function_set.get(packet[0])
+            print(type(packet))
+            # func_to_run = function_set.get(packet.get("FLAG"))
             # if func_to_run:
             #     func_to_run()
     return RETURN_SUCCESS
