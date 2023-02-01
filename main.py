@@ -83,7 +83,7 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
                 print(packet)
                 func_to_run = function_set.get(packet.get("FLAG"))
                 print(func_to_run)
-                args = function_set.get(packet.get("ARGS")) #args MUST be a list of the desired args
+                args = function_set.get("ARGS") #args MUST be a list of the desired args
                 print(args)
                 if func_to_run and args:
                         func_to_run(args)
