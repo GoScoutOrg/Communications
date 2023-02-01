@@ -76,13 +76,22 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
             return RETURN_ERROR
 
     while True:
-        data = client_connection.recv(BUFFER_SIZE)
-        if data:
-            packet = json.loads(data.decode("utf-8"))
-            func_to_run = function_set.get(packet.get("FLAG"))
-            if func_to_run:
-                func_to_run()
-    return RETURN_SUCCESS
+        try:
+            data = client_connection.recv(BUFFER_SIZE)
+            if data:
+                packet = json.loads(data.decode("utf-8"))
+                func_to_run = function_set.get(packet.get("FLAG"))
+                args = function_set.get(packet.get("ARGS")) #args MUST be a list of the desired args
+                if func_to_run and args:
+                        func_to_run(args)
+                elif func_to_run:
+                    func_to_run()
+                else:
+                    flag = packet.get("FLAG")
+                    print(f"INVALID FUNCTION: {flag} in function set: {function_set}")
+        except KeyboardInterrupt:
+            server.close()
+            return RETURN_ERROR
 
 
 def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
@@ -109,13 +118,16 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
         except ConnectionRefusedError:
             pass
     while True:
-        pipe_data = pipe.recv()
-        if pipe_data:
-            # print(pipe_data)
-            client.send(bytes(json.dumps(pipe_data),encoding="utf-8"))
-    return RETURN_SUCCESS
+        try:
+            pipe_data = pipe.recv()
+            if pipe_data:
+                client.send(bytes(json.dumps(pipe_data),encoding="utf-8"))
+        except KeyboardInterrupt:
+            client.close();
+            return RETURN_ERROR
+        except ConnectionRefusedError:
+            pass
 
-# is_initialized = False
 server_parent_end, server_child_end = Pipe()
 client_parent_end, client_child_end = Pipe()
 def parent_proc(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict) -> None:
@@ -140,11 +152,11 @@ def parent_proc(system_ip : str, system_port : int, connection_ip : str, connect
 
 
 # START API FUNCTIONS
-def send_packet(flag : str, data : str):
-    client_parent_end.send({"FLAG": flag, "DATA": data})
+def send_packet(flag : str, data : list[str]):
+    client_parent_end.send({"FLAG": flag, "ARGS": data})
 # END API FUNCTIONS
 
-def main() -> None:
+def main() -> int:
     if (len(sys.argv) - 4 <= 0):
         sys.exit(USAGE)
     args = sys.argv[1:]
@@ -163,22 +175,27 @@ def main() -> None:
         if (system_port < 1024 or system_port > 49151) or (client_port < 1024 or client_port > 49151):
             sys.exit(USAGE)
 
+    """
+    Function set rules:
+        all arguments to functions MUST be in the form of a list[str]. The function itself must parse the arguments!
+    """
     function_set = {
         "GPS": lambda : print("This is the GPS function"),
-        "MOVE": lambda : print("This is the MOVE function")
+        "MOVE": lambda args : print(f"This is the MOVE function: x:{int(args[0])}, y:{int(args[1])}"),
     }
 
     communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
     communications.start()
 
     sleep(2)
-    flag = input("\n\nInput flag ")
-    data = input("\n\nInput data: ")
-    send_packet(flag, data)
+    flag = ""
+    while flag != "CLOSE":
+        flag = input("\n\nInput flag ")
+        args = input("\n\nInput args: ").split(' ')
+        send_packet(flag, args)
 
     communications.join()
-
-    return
+    return RETURN_SUCCESS
 
 if __name__ == "__main__":
     main()
