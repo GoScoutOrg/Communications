@@ -89,11 +89,10 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
                 print("args", args)
                 if func_to_run and args:
                     func_to_run(args)
-                elif func_to_run:
-                    func_to_run()
                 else:
                     flag = packet.get("FLAG")
-                    print(f"INVALID FUNCTION: {flag} in function set: {function_set}")
+                    args = packet.get("ARGS")
+                    print(f"INVALID FUNCTION: {flag} : {args} in function set: {function_set}")
         except KeyboardInterrupt:
             server.close()
             return RETURN_ERROR
@@ -188,7 +187,7 @@ def main() -> int:
         all arguments to functions MUST be in the form of a list[str]. The function itself must parse the arguments!
     """
     function_set = {
-        "GPS": lambda : print("This is the GPS function"),
+        "GPS": lambda args : print("This is the GPS function"),
         "MOVE": lambda args : print(f"This is the MOVE function: x:{int(args[0])}, y:{int(args[1])}"),
     }
 
