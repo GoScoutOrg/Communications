@@ -140,20 +140,8 @@ def parent_proc(system_ip : str, system_port : int, connection_ip : str, connect
 
 
 # START API FUNCTIONS
-def open_communications(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict):
-    # if is_initialized:
-    #     sys.exit("Communications already initialized")
-    # communications = Process(target=parent_proc, args=(system_ip, system_port, connection_ip, connection_port, function_set))
-    # communications.start()
-    return 
-
 def send_packet(flag : str, data : str):
-    # if not is_initialized:
-    #     sys.exit("Communications NOT Initialized. Please call open_communications function before")
-    client_parent_end.send(
-            {"FLAG": flag, "DATA": data}
-            )
-
+    client_parent_end.send({"FLAG": flag, "DATA": data})
 # END API FUNCTIONS
 
 def main() -> None:
@@ -176,15 +164,16 @@ def main() -> None:
             sys.exit(USAGE)
 
     function_set = {
-        "GPS": lambda : print("GPS"),
+        "GPS": lambda : print("This is the GPS function"),
+        "MOVE": lambda : print("This is the MOVE function")
     }
 
     communications = Process(target=parent_proc, args=(system_ip, system_port, connect_ip, client_port, function_set))
     communications.start()
 
     sleep(2)
-    flag = input("Input flag ")
-    data = input("Input data: ")
+    flag = input("\n\nInput flag ")
+    data = input("\n\nInput data: ")
     send_packet(flag, data)
 
     communications.join()
