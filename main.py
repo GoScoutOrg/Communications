@@ -8,37 +8,6 @@ import json
 USAGE = "Usage: python3 main.py [system ip] [connection ip] [port]"
 BUFFER_SIZE = 1024
 
-def socketToIP(s : socket.socket):
-    return s.getpeername()[0]
-
-def send_PDU(socket : socket.socket, flag, src_ip, payload):
-    # packet = PDU.GSPacket(flag, src_ip, socketToIP(socket), payload).compress()
-    packet = None
-    if flag == PDU.FlagConstants.EXECUTION.value:
-        packet = PDU.GSPacket(PDU.FlagConstants.EXECUTION.value, src_ip, socketToIP(socket), 0).compress()
-    elif flag == PDU.FlagConstants.ACK.value:
-        packet = PDU.GSPacket(PDU.FlagConstants.ACK.value, src_ip, socketToIP(socket), 0).compress()
-    elif flag == PDU.FlagConstants.LOCATION.value:
-        packet = PDU.GSPacket(PDU.FlagConstants.LOCATION.value, src_ip, socketToIP(socket), 9, payload).compress()
-    elif flag == PDU.FlagConstants.CLOSE.value: #In this case wait for a recv and then close?
-        packet = PDU.GSPacket(PDU.FlagConstants.CLOSE.value, src_ip, socketToIP(socket), 0).compress()
-
-    if packet:
-        socket.send(packet)
-        print("Sent a PDU with flag:", flag,  "src_ip:", src_ip, "payload", payload )
-    else:   
-        print("no valid packet")
-        return -1
-    return
-
-class ProcCommunicationPacket:
-    def __init__(self, to_pid, from_pid, command):
-        self.to_pid = to_pid
-        self.from_pid = from_pid
-        self.command = command
-
-COMMAND_ERROR = 0x1
-
 RETURN_SUCCESS = 0x0
 RETURN_ERROR = 0x1
 
@@ -79,20 +48,16 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
         try:
             data = client_connection.recv(BUFFER_SIZE)
             if data:
-                print("raw_data", data)
                 packet = json.loads(data.decode("utf-8"))
-                print("packet", packet)
-                print("type:", type(packet))
                 func_to_run = function_set.get(packet.get("FLAG"))
-                print("func", func_to_run)
                 args = packet.get("ARGS") #args MUST be a list of the desired args
-                print("args", args)
                 if func_to_run and args:
                     func_to_run(args)
                 else:
                     flag = packet.get("FLAG")
                     args = packet.get("ARGS")
                     print(f"INVALID FUNCTION: {flag} : {args} in function set: {function_set}")
+                    return RETURN_ERROR
         except KeyboardInterrupt:
             server.close()
             return RETURN_ERROR
@@ -159,7 +124,6 @@ def parent_proc(system_ip : str, system_port : int, connection_ip : str, connect
 
 # START API FUNCTIONS
 def send_packet(flag : str, data : list[str]):
-    print("Sending: ", flag, data);
     client_parent_end.send({"FLAG": flag, "ARGS": data})
 # END API FUNCTIONS
 
