@@ -82,6 +82,7 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
                 print("raw_data", data)
                 packet = json.loads(data.decode("utf-8"))
                 print("packet", packet)
+                print("type:", type(packet))
                 func_to_run = function_set.get(packet.get("FLAG"))
                 print("func", func_to_run)
                 args = function_set.get("ARGS") #args MUST be a list of the desired args
