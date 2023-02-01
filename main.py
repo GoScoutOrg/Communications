@@ -77,16 +77,11 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
 
     while True:
         data = client_connection.recv(BUFFER_SIZE)
-        print("data", data, data[0])
         if data:
-            packet = list(data.decode("utf-8"))
-            print("RECV", packet)
-            print("Checking", function_set, packet[0])
+            packet = data.decode("utf-8")
             func_to_run = function_set.get(packet[0])
-            print("running", func_to_run)
             if func_to_run:
-                pass
-                # function_set.get(pack
+                func_to_run()
     return RETURN_SUCCESS
 
 
@@ -116,8 +111,8 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     while True:
         pipe_data = pipe.recv()
         if pipe_data:
-            test = str(json.dumps(pipe_data))
-            client.send(bytes(test,encoding="utf-8"))
+            print(pipe_data)
+            # client.send(bytes(json.dumps(pipe_data),encoding="utf-8"))
     return RETURN_SUCCESS
 
 # is_initialized = False
@@ -155,7 +150,7 @@ def open_communications(system_ip : str, system_port : int, connection_ip : str,
 def send_packet(flag : str, data : str):
     # if not is_initialized:
     #     sys.exit("Communications NOT Initialized. Please call open_communications function before")
-    client_parent_end.send((flag, data))
+    client_parent_end.send({flag: flag, data:data})
 
 # END API FUNCTIONS
 
