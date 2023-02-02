@@ -44,6 +44,7 @@ connection_ip is the ip you wish to connect to and connection port is the port t
 ### Example:
 * drone with ip 192.168.1.1, port=7777
 * rover with ip 192.168.1.2, port 8888
+
 In drone main.py:
 ```python
 communications = Process(target=parent_proc,
