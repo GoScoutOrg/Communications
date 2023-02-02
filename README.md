@@ -20,7 +20,7 @@ Clone this repo such that the filesystem looks like this:
 ## Importation
 in Device/main.py
 ```python
-import ..Communications import communications
+from ..Communications import communications
 ```
 
 ## Usage:
