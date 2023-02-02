@@ -5,6 +5,7 @@ import communications.utils as utils
 from communications.server import server_proc
 from communications.client import client_proc
 
+# START API FUNCTIONS
 server_parent_end, server_child_end = Pipe()
 client_parent_end, client_child_end = Pipe()
 def parent_proc(system_ip : str, system_port : int, connection_ip : str, connection_port : int, function_set : dict) -> None:
@@ -27,8 +28,6 @@ def parent_proc(system_ip : str, system_port : int, connection_ip : str, connect
             clients_running |= 0x10
     return
 
-
-# START API FUNCTIONS
 def send_packet(flag : str, data : list[str]):
     client_parent_end.send({"FLAG": flag, "ARGS": data})
 # END API FUNCTIONS
