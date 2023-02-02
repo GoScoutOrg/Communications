@@ -83,7 +83,7 @@ function_set = {
 
 In Drone:
 ```python3
-communications.send_packet(flag="GPS", args=[1,2])
+communications.send_packet(flag="GPS", args=["1","2"])
 ```
 
 Assuming the function_set input correctly, this causes the receiving device (Drone)
