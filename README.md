@@ -20,6 +20,7 @@ Clone this repo such that the filesystem looks like this:
 ## Importation
 in Device/main.py
 ```python
+from multiprocessing import Process
 from ..Communications import communications
 ```
 
@@ -28,7 +29,7 @@ In device main, call
 
 ```python
 communications = Process(target=...,
-    args(system_ip="", system_port=#, connection_ip="", connection_port=#, function_set={}))
+    args=(system_ip="", system_port=#, connection_ip="", connection_port=#, function_set={}))
 
 communications.start()
 
@@ -48,13 +49,13 @@ connection_ip is the ip you wish to connect to and connection port is the port t
 In drone main.py:
 ```python
 communications = Process(target=parent_proc,
-    args(system_ip="192.168.1.1", system_port=7777, connection_ip="192.168.1.2", connection_port=8888, function_set={}))
+    args=("192.168.1.1", 7777, "192.168.1.2", 8888, {}))
 communications.start()
 ```
 In rover main.py:
 ```python
 communications = Process(target=parent_proc,
-    args(system_ip="192.168.1.2", system_port=8888, connection_ip="192.168.1.1", connection_port=7777, function_set={}))
+    args=("192.168.1.2", 8888, "192.168.1.1", 7777, {}))
 communications.start()
 ```
 
