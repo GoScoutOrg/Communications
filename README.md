@@ -1,6 +1,23 @@
 # Generic Device Communications!
 
 ## Installation:
+Clone this repo such that the filesystem looks like this:
+├── Communications
+│ ├── communications
+│ ├── ├── \_\_init\_\_.py
+│ ├── ├── client.py
+│ ├── ├── parent.py
+│ ├── ├── server.py
+│ ├── ├── utils.py
+├── Device
+│ ├── main.py
+│ ├── other device code
+
+## Importation
+in Device/main.py
+```python
+import ..Communications import communications
+```
 
 ## Usage:
 In device main, call
@@ -45,4 +62,17 @@ function_set = {
     "GPS": lambda args : print("This is the GPS function"),
     "MOVE": lambda args : print(f"This is the MOVE function: x:{int(args[0])}, y:{int(args[1])}"),
 }
+```
+
+## Sending Data
+To send data (assuming import from above):
+```python3
+def example(args : list[str]):
+    print(args[0])
+
+function_set = {
+    "GPS": example,
+}
+
+communications.send_packet(flag="GPS", args=[1,2])
 ```
