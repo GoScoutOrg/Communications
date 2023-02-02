@@ -3,26 +3,19 @@
 ## Installation:
 Clone this repo such that the filesystem looks like this:
 
+```bash
 ├── Communications
-
+│ ├── setup.py
 │ ├── communications
-
 │ ├── ├── \_\_init\_\_.py
-
 │ ├── ├── client.py
-
 │ ├── ├── parent.py
-
 │ ├── ├── server.py
-
 │ ├── ├── utils.py
-
 ├── Device
-
 │ ├── main.py
-
 │ ├── other device code
-
+```
 
 ## Importation
 in Device/main.py
