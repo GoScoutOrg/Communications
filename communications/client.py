@@ -1,7 +1,8 @@
 import sys
 import socket
-import utils
 import json
+
+import communications.utils as utils
 
 def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
     if not utils.checkFunctionValidity(function_set):

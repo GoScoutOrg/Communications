@@ -1,9 +1,9 @@
 import sys 
 from multiprocessing import Process, Pipe
 
-import utils
-from server import server_proc
-from client import client_proc
+import communications.utils as utils
+from communications.server import server_proc
+from communications.client import client_proc
 
 server_parent_end, server_child_end = Pipe()
 client_parent_end, client_child_end = Pipe()
