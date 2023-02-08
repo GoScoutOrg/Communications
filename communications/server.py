@@ -48,7 +48,7 @@ def server_proc(pipe, system_ip : str, port : int, function_set : dict) -> int:
                     print(f"INVALID FUNCTION: {flag} : {args} in function set: {function_set}")
                     server.close()
                     return utils.RETURN_ERROR
-        except KeyboardInterrupt:
+        except (ConnectionRefusedError, TimeoutError):
             server.close()
             return utils.RETURN_ERROR
 

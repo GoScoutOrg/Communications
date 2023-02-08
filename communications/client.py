@@ -36,5 +36,5 @@ def client_proc(pipe, connect_ip : str, port : int, function_set : dict) -> int:
         except KeyboardInterrupt:
             client.close();
             return utils.RETURN_ERROR
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, TimeoutError):
             pass
